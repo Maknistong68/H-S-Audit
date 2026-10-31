@@ -40,14 +40,21 @@ restored with Undo, and **Export → Snapshots** keeps restore points (every
 
 ## Deploying
 
-The app is static and deploys to GitHub Pages:
+The app is static and deploys to GitHub Pages with two GitHub Actions
+workflows, `ci.yml` (typecheck, unit tests, end-to-end tests, build on every
+push) and `deploy.yml` (publish `dist/` to Pages on every push to `main`).
 
-1. In the repository go to **Settings → Pages** and set **Source** to
-   **GitHub Actions** (once).
-2. Merge to `main`. The `Deploy to GitHub Pages` workflow builds and publishes
-   `dist/` to https://maknistong68.github.io/h-s-audit/.
+The workflow files live in `docs/github-workflows/` because the GitHub App
+used by the cloud coding session is not allowed to create files under
+`.github/workflows/`. One-time setup, done from the GitHub website or a local
+clone:
 
-Every push also runs `CI` (typecheck, unit tests, end-to-end tests, build).
+1. Move `docs/github-workflows/ci.yml` and `docs/github-workflows/deploy.yml`
+   to `.github/workflows/` and commit.
+2. In the repository go to **Settings → Pages** and set **Source** to
+   **GitHub Actions**.
+3. Merge to `main`. The deploy workflow publishes the app to
+   https://maknistong68.github.io/h-s-audit/.
 
 ## Changing the checklist
 
