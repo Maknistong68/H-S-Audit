@@ -41,6 +41,9 @@ export async function buildBackup(auditId: string): Promise<{ bytes: Uint8Array;
     db.media.where('auditId').equals(auditId).toArray(),
   ]);
 
+  // Dexie returns rows in primary-key (uuid) order; a backup should list media in the order it was taken.
+  media.sort((a, b) => a.createdAt - b.createdAt || a.id.localeCompare(b.id));
+
   const files: Record<string, Uint8Array> = {};
   const entries: BackupMediaEntry[] = media.map((m) => {
     const file = m.type === 'photo' ? `photos/${m.id}.jpg` : `audio/${m.id}.${audioExt(m.mime)}`;

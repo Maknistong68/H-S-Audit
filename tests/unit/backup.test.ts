@@ -47,7 +47,9 @@ test('zip layout', async () => {
   expect(m.formatVersion).toBe(1);
   expect(m.audit.header.auditNo).toBe('HSSEW-004');
   expect(m.answers[0]).toMatchObject({ itemId: 'A1', result: 'no', note: 'note', repeated: true });
-  expect(Array.from(files[m.media[0].file])).toEqual([9, 8, 7]);
+  const photoEntry = m.media.find((x: { type: string }) => x.type === 'photo');
+  expect(photoEntry.file).toMatch(/^photos\/.+\.jpg$/);
+  expect(Array.from(files[photoEntry.file])).toEqual([9, 8, 7]);
   expect((await repo.getAudit(a.id))!.lastExportAt).toBeGreaterThan(0);
 });
 
