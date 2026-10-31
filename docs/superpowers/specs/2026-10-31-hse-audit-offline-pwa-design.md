@@ -235,9 +235,9 @@ interface Media {
   id: string; auditId: string;
   owner: { kind: 'item'; itemId: string } | { kind: 'positive'; positiveId: string };
   type: 'photo' | 'audio';
-  blob: Blob; mime: string; bytes: number;
+  data: ArrayBuffer; mime: string; bytes: number;   // ArrayBuffer, not Blob: structured-clones identically in every browser and in tests
   width?: number; height?: number; durationMs?: number;
-  thumb?: Blob;                    // photos only, ~200 px JPEG
+  thumb?: ArrayBuffer;             // photos only, ~200 px JPEG
   createdAt: number; deletedAt?: number;
 }
 
@@ -327,9 +327,9 @@ Cell mapping (`src/export/mapping.ts`):
 | Item result | column T of the item's `row`: `Full`, `Partial`, `No`, `N/A`, or empty |
 | Item note | column U of the item's `row`; prefixed `Repeated observation. ` when the Repeated toggle is on |
 | Part 3 observation rows 155–235 | one row per item in checklist order: B = id, C = question, H = note when result is No/Partial (else empty), R = `COMPLIANT` when Full, `N/A` when N/A. The template's formulas in B, C, H and R of these rows are replaced by these values |
-| Part 3 photos | embedded in R:T of the item's Part 3 row in a grid of three per line at 100 px height; the row height is raised to fit the lines. At most nine photos per item go into the Excel (the rest stay in the backup). No rows are inserted, so no formula references move |
+| Part 3 photos | embedded in R:T of the item's Part 3 row (about 240 px wide) in a grid of two per line, each 110 × 82 px; the row height is raised to fit the lines. At most eight photos per item go into the Excel (the rest stay in the backup). No rows are inserted, so no formula references move |
 | Negative / positive counts | H152, P152 |
-| Positive observations | rows from 238 onward: C = `Positive`, H = text, photos in R:T as above |
+| Positive observations | rows from 239 onward (the rows Book2 uses for them; C:G, H:Q and R:T are merged there): C = `Positive`, H = text, photos in R:T as above |
 | Part 2 formulas (R120:T137) and Part 1 section-score formulas | kept from the template; their cached results are set from the scoring engine so previews that do not recalculate still show numbers; `fullCalcOnLoad` is set so Excel recalculates on open |
 
 Acceptance: a workbook exported from Book2's own data, read back with
