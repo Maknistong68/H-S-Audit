@@ -1,6 +1,7 @@
 import { useMemo } from 'preact/hooks';
 import type { Answer } from '../../db/db';
 import { BAND_LABELS, scoreAudit } from '../../domain/scoring';
+import { sentenceCase } from '../../domain/text';
 import type { Result } from '../../domain/types';
 import { BottomNav } from '../components/BottomNav';
 import { ScoreBar, pct } from '../components/ScoreBar';
@@ -36,24 +37,27 @@ export function Score({ id }: { id: string }) {
     <>
       <TopBar title="Score" back={paths.home()} subtitle={view?.audit?.header.auditNo || 'Untitled audit'} />
       <main class="screen has-nav">
-        <section class="card overall-card">
+        <section class="panel overall">
           <span class="overall-pct">{pct(score.overall)}</span>
           <span class="overall-band">{score.band ? BAND_LABELS[score.band] : 'No scored answers yet'}</span>
-          <span class="muted">{score.unanswered} unanswered — not counted yet</span>
-          <span class="muted small">Overall = average of sections A, B and C. Full = weight, Partial = half, No = 0, N/A excluded.</span>
+          <span class="muted small">{score.unanswered} unanswered, not counted yet</span>
         </section>
 
-        {score.sections.map((section) => (
-          <section class="score-section" key={section.id}>
-            <ScoreBar label={`${section.id} · ${section.title}`} ratio={section.ratio} detail={`${fmt(section.tally.points)} / ${section.tally.possible}`} />
-            {section.subsections
-              .filter((sub) => sub.id !== section.id)
-              .map((sub) => (
-                <ScoreBar key={sub.id} indent label={`${sub.id} · ${sub.title}`} ratio={sub.ratio} detail={`${fmt(sub.tally.points)} / ${sub.tally.possible}`} />
-              ))}
-          </section>
-        ))}
-
+        <section class="panel">
+          <div class="score-rows">
+            {score.sections.map((section) => (
+              <div class="score-section" key={section.id}>
+                <ScoreBar id={section.id} label={sentenceCase(section.title)} ratio={section.ratio} detail={`${fmt(section.tally.points)} / ${section.tally.possible}`} />
+                {section.subsections
+                  .filter((sub) => sub.id !== section.id)
+                  .map((sub) => (
+                    <ScoreBar key={sub.id} indent id={sub.id} label={sub.title} ratio={sub.ratio} detail={`${fmt(sub.tally.points)} / ${sub.tally.possible}`} />
+                  ))}
+              </div>
+            ))}
+          </div>
+          <p class="panel-note">Overall is the average of sections A, B and C. Full scores the weight, Partial half of it, No nothing; N/A is left out.</p>
+        </section>
       </main>
       <BottomNav auditId={id} />
     </>

@@ -1,3 +1,19 @@
+/* Variable font (weight axis 400–600), latin subset, self-hosted so it works offline */
+@font-face {
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 400 600;
+  font-display: swap;
+  src: url('../assets/fonts/plex-sans.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'IBM Plex Sans Condensed';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('../assets/fonts/plex-sans-condensed-600.woff2') format('woff2');
+}
+
 *,
 *::before,
 *::after {
@@ -5,16 +21,22 @@
 }
 
 html {
+  /* anything scrolled into view (focus, keyboard, tests) clears the sticky top bar + walk head and the bottom nav */
+  scroll-padding-top: calc(var(--topbar-h) + var(--walk-head-h, 0px) + 56px);
+  scroll-padding-bottom: 96px;
   font-family: var(--font);
   font-size: 16px;
+  line-height: var(--leading);
   color: var(--ink);
+  background: var(--canvas);
   -webkit-text-size-adjust: 100%;
   -webkit-tap-highlight-color: transparent;
+  font-variant-numeric: tabular-nums;
 }
 
 body {
   margin: 0;
-  background: var(--surface);
+  background: var(--canvas);
   min-height: 100dvh;
 }
 
@@ -27,12 +49,24 @@ p {
 
 h1 {
   font-size: var(--text-xl);
-  font-weight: 700;
+  font-weight: 600;
+  line-height: var(--leading-tight);
 }
 
 h2 {
   font-size: var(--text-lg);
   font-weight: 600;
+  line-height: var(--leading-tight);
+}
+
+h3 {
+  font-size: var(--text-md);
+  font-weight: 600;
+  line-height: var(--leading-tight);
+}
+
+a {
+  color: var(--accent);
 }
 
 button,
@@ -57,13 +91,26 @@ button {
   padding-bottom: calc(var(--space-6) + env(safe-area-inset-bottom));
   max-width: 1200px;
   margin: 0 auto;
+  animation: screen-in var(--motion-200) var(--ease-out);
+}
+
+@keyframes screen-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
   *::after {
-    animation: none !important;
-    transition: none !important;
+    animation-duration: 0s !important;
+    animation-delay: 0s !important;
+    transition-duration: 0s !important;
   }
 }

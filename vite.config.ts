@@ -23,7 +23,7 @@ export default defineConfig({
       includeAssets: ['templates/hs-audit-template.xlsx'],
       workbox: {
         clientsClaim: true, // the first service worker controls the page immediately, so an offline reload works
-        globPatterns: ['**/*.{js,css,html,svg,png,xlsx,webmanifest}'],
+        globPatterns: ['**/*.{js,css,html,svg,png,xlsx,woff2,webmanifest}'],
         maximumFileSizeToCacheInBytes: 6 * 1024 * 1024,
         navigateFallback: `${base}index.html`,
       },

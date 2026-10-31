@@ -2,9 +2,10 @@ import type { ComponentChildren } from 'preact';
 import { useEffect, useRef, useState } from 'preact/hooks';
 import type { Answer, Tag } from '../../db/db';
 import type { ChecklistItem, Result } from '../../domain/types';
+import { Icon } from './icons';
 import { NoteField, type NoteFieldHandle } from './NoteField';
 import { ResultControl, RESULT_OPTIONS } from './ResultControl';
-import { TagChips } from './TagChips';
+import { TagText } from './TagChips';
 
 export interface ItemCardProps {
   auditId: string;
@@ -23,9 +24,9 @@ export interface ItemCardProps {
   onNext(): void;
   onPrev(): void;
   onNextUnanswered(): void;
-  /** Photo / memo / dictate controls, rendered in the toolbar. */
+  /** Photo / memo / dictate controls, rendered in the tool row. */
   media?: ComponentChildren;
-  /** Thumbnails and memos, rendered under the toolbar. */
+  /** Thumbnails and memos, rendered under the tool row. */
   mediaStrip?: ComponentChildren;
   /** Interim dictation text shown under the note. */
   interim?: string;
@@ -36,6 +37,7 @@ export interface ItemCardProps {
 
 const resultLabel = (r?: Result) => RESULT_OPTIONS.find((o) => o.value === r)?.label;
 
+/** One question: a plain row that unfolds in place. Colour appears only on the status mark and the chosen result. */
 export function ItemCard(props: ItemCardProps) {
   const { item, answer, expanded } = props;
   const result = answer?.result;
@@ -66,84 +68,108 @@ export function ItemCard(props: ItemCardProps) {
 
   const firstLine = note.split('\n')[0];
   const counts = props.mediaCounts ?? { photos: 0, audio: 0 };
-  const descriptionId = `desc-${item.id}`;
-  const description = [resultLabel(result) ?? 'Unanswered', answer?.flagged ? 'flagged' : '', answer?.repeated ? 'repeated' : '']
-    .filter(Boolean)
-    .join(', ');
+  const descriptionId = `${props.domId ?? 'item'}-desc-${item.id}`;
+  const previewBits = [
+    firstLine,
+    counts.photos > 0 ? `${counts.photos} photo${counts.photos > 1 ? 's' : ''}` : '',
+    counts.audio > 0 ? `${counts.audio} memo${counts.audio > 1 ? 's' : ''}` : '',
+  ].filter(Boolean);
 
   return (
-    <article id={props.domId ?? `item-${item.id}`} class={`item-card${expanded ? ' expanded' : ''}${result ? ` is-${result}` : ''}`}>
+    <article id={props.domId ?? `item-${item.id}`} class={`row${expanded ? ' expanded' : ''}`}>
       <button
         type="button"
-        class="item-head"
+        class="row-head"
         aria-expanded={expanded}
         aria-label={`${item.id} ${item.text}`}
         aria-describedby={descriptionId}
         onClick={props.onToggle}
       >
-        <span class="item-id">{item.id}</span>
-        <span class="item-text">{item.text}</span>
-        <span class="item-meta" id={descriptionId}>
-          <span class="chip chip-weight" title="Weight">
-            W{item.weight}
-          </span>
-          {result && <span class={`chip chip-result chip-${result}`}>{resultLabel(result)}</span>}
-          {answer?.flagged && <span class="chip chip-flag">Flagged</span>}
-          {answer?.repeated && <span class="chip chip-repeated">Repeated</span>}
-          {counts.photos > 0 && <span class="chip">{counts.photos} photo{counts.photos > 1 ? 's' : ''}</span>}
-          {counts.audio > 0 && <span class="chip">{counts.audio} memo{counts.audio > 1 ? 's' : ''}</span>}
+        <span class="row-id">{item.id}</span>
+        <span class="row-main">
+          <span class="row-q">{item.text}</span>
+          {!expanded && previewBits.length > 0 && <span class="row-preview">{previewBits.join('   ')}</span>}
         </span>
-        {!expanded && firstLine && <span class="item-note-preview">{firstLine}</span>}
+        <span class="row-status" id={descriptionId}>
+          {answer?.flagged && (
+            <>
+              <Icon name="flag" size={16} class="row-flag" />
+              <span class="visually-hidden">flagged, </span>
+            </>
+          )}
+          <i key={result ?? 'none'} class={`dot${result ? ` dot-${result}` : ''}`} aria-hidden="true" />
+          <span class={`status-word${result ? ` is-${result}` : ''}`}>{resultLabel(result) ?? ''}</span>
+          {answer?.repeated && <span class="visually-hidden">, repeated</span>}
+        </span>
       </button>
 
       {expanded && (
-        <div class="item-body">
-          <ResultControl value={result} onChange={setResult} />
+        <div class="row-body">
+          <div class="row-body-inner">
+            <div class="kv row-kv">
+              <span>
+                <b>Weight</b> {item.weight}
+              </span>
+              <TagText tagIds={props.tagIds} tags={props.tags} />
+            </div>
 
-          {noteOpen ? (
-            <NoteField
-              id={`${props.auditId}:${item.id}`}
-              value={note}
-              onSave={props.onNote}
-              interim={props.interim}
-              ref={(h: NoteFieldHandle | null) => {
-                noteHandle.current = h;
-                props.noteRef?.(h);
-              }}
-            />
-          ) : (
-            <button type="button" class="btn btn-sm btn-ghost self-start" onClick={() => { focusNote.current = true; setNoteOpen(true); }}>
-              Add note
-            </button>
-          )}
+            <ResultControl value={result} onChange={setResult} />
 
-          <div class="item-toolbar" role="toolbar" aria-label="Item tools">
-            {props.media}
-            <button type="button" class="btn btn-sm" aria-pressed={!!answer?.flagged} onClick={() => props.onFlag(!answer?.flagged)}>
-              Flag
-            </button>
-            <button type="button" class="btn btn-sm" aria-pressed={!!answer?.repeated} onClick={() => props.onRepeated(!answer?.repeated)}>
-              Repeated
-            </button>
-            <button type="button" class="btn btn-sm" onClick={props.onEditTags}>
-              Tags
-            </button>
-          </div>
+            {noteOpen ? (
+              <NoteField
+                id={`${props.auditId}:${item.id}`}
+                value={note}
+                onSave={props.onNote}
+                interim={props.interim}
+                ref={(h: NoteFieldHandle | null) => {
+                  noteHandle.current = h;
+                  props.noteRef?.(h);
+                }}
+              />
+            ) : (
+              <button
+                type="button"
+                class="btn btn-quiet self-start"
+                onClick={() => {
+                  focusNote.current = true;
+                  setNoteOpen(true);
+                }}
+              >
+                <Icon name="plus" size={18} />
+                Add note
+              </button>
+            )}
 
-          {props.mediaStrip}
+            <div class="tool-row" role="toolbar" aria-label="Item tools">
+              {props.media}
+              <button type="button" class="icon-btn" aria-pressed={!!answer?.flagged} onClick={() => props.onFlag(!answer?.flagged)}>
+                <Icon name="flag" />
+                <span class="caption">Flag</span>
+              </button>
+              <button type="button" class="icon-btn" aria-pressed={!!answer?.repeated} onClick={() => props.onRepeated(!answer?.repeated)}>
+                <Icon name="repeat" />
+                <span class="caption">Repeated</span>
+              </button>
+              <button type="button" class="icon-btn" onClick={props.onEditTags}>
+                <Icon name="tag" />
+                <span class="caption">Tags</span>
+              </button>
+            </div>
 
-          <TagChips tagIds={props.tagIds} tags={props.tags} />
+            {props.mediaStrip}
 
-          <div class="item-footer">
-            <button type="button" class="btn btn-sm" onClick={props.onPrev}>
-              Previous
-            </button>
-            <button type="button" class="btn btn-sm" onClick={props.onNext}>
-              Next
-            </button>
-            <button type="button" class="btn btn-sm btn-primary" onClick={props.onNextUnanswered}>
-              Next unanswered
-            </button>
+            <div class="row-footer">
+              <button type="button" class="icon-btn" aria-label="Previous" onClick={props.onPrev}>
+                <Icon name="chevron-left" />
+              </button>
+              <button type="button" class="icon-btn" aria-label="Next" onClick={props.onNext}>
+                <Icon name="chevron-right" />
+              </button>
+              <button type="button" class="btn btn-primary" onClick={props.onNextUnanswered}>
+                Next unanswered
+                <Icon name="next" size={18} />
+              </button>
+            </div>
           </div>
         </div>
       )}

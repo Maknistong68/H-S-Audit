@@ -5,6 +5,7 @@ import { repo } from '../../db/repo';
 import { listSnapshots } from '../../db/snapshots';
 import { preflight, type PreflightIssue } from '../../export/preflight';
 import { BottomNav } from '../components/BottomNav';
+import { Icon } from '../components/icons';
 import { PreflightList } from '../components/PreflightList';
 import { Sheet } from '../components/Sheet';
 import { SnapshotList } from '../components/SnapshotList';
@@ -80,29 +81,35 @@ export function Export({ id }: { id: string }) {
       <TopBar title="Export" back={paths.home()} subtitle={audit?.header.auditNo || 'Untitled audit'} />
       <main class="screen has-nav">
         {audit && (
-          <section class="card export-card">
-            <div class="export-status">
-              <span class={`chip chip-${audit.status}`}>{audit.status === 'final' ? 'Final' : audit.status === 'archived' ? 'Archived' : 'Draft'}</span>
-              <span class="muted">{audit.lastExportAt ? `Last exported ${relativeTime(audit.lastExportAt)}` : 'Never exported'}</span>
+          <section class="panel">
+            <div class="panel-head">
+              <h2>Report</h2>
+              <span class="status-text">
+                {audit.status === 'final' ? 'Final' : audit.status === 'archived' ? 'Archived' : 'Draft'}
+                {' · '}
+                {audit.lastExportAt ? `Last exported ${relativeTime(audit.lastExportAt)}` : 'Never exported'}
+              </span>
             </div>
-            <div class="actions-row">
-              <button type="button" class="btn btn-primary" disabled={busy !== null} onClick={() => request('excel')}>
+            <div class="panel-body export-actions">
+              <button type="button" class="btn btn-primary btn-block" disabled={busy !== null} onClick={() => request('excel')}>
+                <Icon name="share" size={18} />
                 {busy === 'excel' ? 'Building Excel…' : 'Export Excel'}
               </button>
-              <button type="button" class="btn" disabled={busy !== null} onClick={() => request('backup')}>
+              <p class="muted small">The Book2-layout workbook with photos, built on this phone. Share it to Teams or email, or save it.</p>
+              <button type="button" class="btn btn-block" disabled={busy !== null} onClick={() => request('backup')}>
+                <Icon name="archive" size={18} />
                 {busy === 'backup' ? 'Building backup…' : 'Export backup'}
               </button>
+              <p class="muted small">A zip with everything, including voice memos. Import backup on another phone or on the PC re-opens it.</p>
             </div>
-            <p class="muted small">
-              Excel is the Book2-layout report with photos. The backup zip also holds the voice memos and can be re-opened in this app on another device.
-            </p>
-            <div class="actions-row">
+            <div class="panel-note export-final">
               {audit.status === 'final' ? (
-                <button type="button" class="btn btn-sm btn-ghost" onClick={() => void repo.setStatus(id, 'draft')}>
+                <button type="button" class="btn btn-sm btn-quiet" onClick={() => void repo.setStatus(id, 'draft')}>
                   Back to draft
                 </button>
               ) : (
-                <button type="button" class="btn btn-sm btn-ghost" onClick={() => void repo.setStatus(id, 'final')}>
+                <button type="button" class="btn btn-sm btn-quiet" onClick={() => void repo.setStatus(id, 'final')}>
+                  <Icon name="check" size={18} />
                   Mark as final
                 </button>
               )}
@@ -127,7 +134,7 @@ export function Export({ id }: { id: string }) {
           >
             Export anyway
           </button>
-          <button type="button" class="btn btn-ghost" onClick={() => setPending(null)}>
+          <button type="button" class="btn btn-quiet" onClick={() => setPending(null)}>
             Fix first
           </button>
         </div>

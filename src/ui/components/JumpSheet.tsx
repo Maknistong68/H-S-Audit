@@ -1,5 +1,6 @@
 import { checklist } from '../../data/checklist';
 import type { Answer } from '../../db/db';
+import { sentenceCase } from '../../domain/text';
 import { Sheet } from './Sheet';
 
 export function JumpSheet(props: { open: boolean; answers: ReadonlyMap<string, Answer>; onJump(firstItemId: string): void; onClose(): void }) {
@@ -10,7 +11,8 @@ export function JumpSheet(props: { open: boolean; answers: ReadonlyMap<string, A
         {checklist.sections.map((section) => (
           <li key={section.id}>
             <div class="jump-section">
-              {section.id} · {section.title}
+              <span class="letter">{section.id}</span>
+              <span>{sentenceCase(section.title)}</span>
             </div>
             <ul class="jump-subs">
               {section.subsections.map((sub) => {
@@ -18,8 +20,9 @@ export function JumpSheet(props: { open: boolean; answers: ReadonlyMap<string, A
                 return (
                   <li key={sub.id}>
                     <button type="button" class="jump-btn" onClick={() => props.onJump(ids[0])}>
-                      <span>{sub.implicit ? 'All questions' : `${sub.id} · ${sub.title}`}</span>
-                      <span class="muted">
+                      <span class="jump-id">{sub.implicit ? '' : sub.id}</span>
+                      <span class="jump-title">{sub.implicit ? 'All questions' : sub.title}</span>
+                      <span class="jump-count">
                         {done(ids)}/{ids.length}
                       </span>
                     </button>

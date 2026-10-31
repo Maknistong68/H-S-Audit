@@ -55,80 +55,97 @@ export function Settings() {
     <>
       <TopBar title="Settings" back={paths.home()} />
       <main class="screen">
-        <section class="findings-section">
-          <h2>Dictation</h2>
-          <div class="field">
-            <label for="dictation-lang">Dictation language</label>
-            <select id="dictation-lang" value={lang ?? 'en-US'} onChange={(e) => void repo.setSetting('dictationLang', (e.currentTarget as HTMLSelectElement).value)}>
-              {LANGS.map((l) => (
-                <option key={l.value} value={l.value}>
-                  {l.label}
-                </option>
-              ))}
-            </select>
+        <section class="panel">
+          <div class="panel-head">
+            <h2>Dictation</h2>
           </div>
-          <p class="muted small">Dictation uses the phone's speech service and usually needs mobile signal. Voice memos work without it.</p>
+          <div class="panel-body">
+            <div class="field">
+              <label for="dictation-lang">Dictation language</label>
+              <select id="dictation-lang" value={lang ?? 'en-US'} onChange={(e) => void repo.setSetting('dictationLang', (e.currentTarget as HTMLSelectElement).value)}>
+                {LANGS.map((l) => (
+                  <option key={l.value} value={l.value}>
+                    {l.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+          <p class="panel-note">Dictation uses the phone's speech service and usually needs mobile signal. Voice memos work without it.</p>
         </section>
 
-        <section class="findings-section">
-          <h2>Photos</h2>
-          <label class="check-row">
-            <input
-              type="checkbox"
-              checked={photoCopies ?? true}
-              onChange={(e) => void repo.setSetting(PHOTO_COPIES_SETTING, (e.currentTarget as HTMLInputElement).checked)}
-            />
-            <span>Keep a copy of each photo in Downloads</span>
-          </label>
-          <p class="muted small">
-            Insurance against losing a draft: every photo added in the app is also saved to the phone. On Android it appears in the gallery under
-            “Download”; on iPhone it goes to Files › Downloads (use Share → Save Image on a photo for the Photos app). The browser may ask once to
-            allow multiple downloads.
+        <section class="panel">
+          <div class="panel-head">
+            <h2>Photos</h2>
+          </div>
+          <div class="panel-body">
+            <label class="switch">
+              <input
+                type="checkbox"
+                checked={photoCopies ?? true}
+                onChange={(e) => void repo.setSetting(PHOTO_COPIES_SETTING, (e.currentTarget as HTMLInputElement).checked)}
+              />
+              <span class="switch-track" aria-hidden="true" />
+              <span class="switch-label">Keep a copy of each photo in Downloads</span>
+            </label>
+          </div>
+          <p class="panel-note">
+            Insurance against losing a draft: every photo added in the app is also saved to the phone. On Android it appears in the gallery under “Download”; on
+            iPhone it goes to Files › Downloads (use Share → Save Image on a photo for the Photos app). The browser may ask once to allow multiple downloads.
           </p>
         </section>
 
         <TagManager tags={tags ?? []} />
 
-        <section class="findings-section">
-          <h2>Storage</h2>
-          {storage && (
-            <p>
-              Persistent storage: <strong>{storage.persisted === null ? 'unknown' : storage.persisted ? 'on' : 'off'}</strong>
-              {storage.usageMb !== null && (
-                <span class="muted">
-                  {' '}
-                  · {storage.usageMb} MB used{storage.quotaMb !== null ? ` of ${storage.quotaMb} MB` : ''}
+        <section class="panel">
+          <div class="panel-head">
+            <h2>Storage</h2>
+          </div>
+          <div class="panel-body">
+            {storage && (
+              <p class="kv">
+                <span>
+                  <b>Persistent storage</b> {storage.persisted === null ? 'unknown' : storage.persisted ? 'on' : 'off'}
                 </span>
-              )}
-            </p>
-          )}
-          {storage?.persisted === false && (
-            <button type="button" class="btn btn-sm" onClick={requestPersist}>
-              Request persistent storage
-            </button>
-          )}
-          <p class="muted small">Audits live only on this device. Export a backup before changing phones or clearing browser data.</p>
+                {storage.usageMb !== null && (
+                  <span>
+                    <b>Used</b> {storage.usageMb} MB{storage.quotaMb !== null ? ` of ${storage.quotaMb} MB` : ''}
+                  </span>
+                )}
+              </p>
+            )}
+            {storage?.persisted === false && (
+              <div class="actions-row" style={{ marginTop: '12px' }}>
+                <button type="button" class="btn btn-sm" onClick={requestPersist}>
+                  Request persistent storage
+                </button>
+              </div>
+            )}
+          </div>
+          <p class="panel-note">Audits live only on this device. Export a backup before changing phones or clearing browser data.</p>
         </section>
 
-        <section class="findings-section">
-          <h2>App</h2>
-          <p>
-            Version <strong>{import.meta.env.VITE_APP_VERSION ?? 'dev'}</strong>
-          </p>
-          {!installed() && (
-            <p class="muted small">
-              {isIos
-                ? 'Install to the home screen: tap Share, then “Add to Home Screen”. This keeps your audits safe from Safari’s storage clean-up.'
-                : 'Install to the home screen: open the browser menu and choose “Install app” or “Add to Home screen”.'}
-            </p>
-          )}
-          <button
-            type="button"
-            class="btn btn-sm"
-            onClick={() => void checkForUpdates().then((ok) => toast(ok ? 'Checked — you will be asked to reload if a new version is ready' : 'Updates are checked automatically when installed'))}
-          >
-            Check for updates
-          </button>
+        <section class="panel">
+          <div class="panel-head">
+            <h2>App</h2>
+            <span class="status-text">Version {import.meta.env.VITE_APP_VERSION ?? 'dev'}</span>
+          </div>
+          <div class="panel-body">
+            {!installed() && (
+              <p class="muted small" style={{ marginBottom: '12px' }}>
+                {isIos
+                  ? 'Install to the home screen: tap Share, then “Add to Home Screen”. This keeps your audits safe from Safari’s storage clean-up.'
+                  : 'Install to the home screen: open the browser menu and choose “Install app” or “Add to Home screen”.'}
+              </p>
+            )}
+            <button
+              type="button"
+              class="btn btn-sm"
+              onClick={() => void checkForUpdates().then((ok) => toast(ok ? 'Checked — you will be asked to reload if a new version is ready' : 'Updates are checked automatically when installed'))}
+            >
+              Check for updates
+            </button>
+          </div>
         </section>
       </main>
     </>

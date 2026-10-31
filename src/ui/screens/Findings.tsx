@@ -7,6 +7,7 @@ import { ownerKey } from '../../db/ids';
 import { repo } from '../../db/repo';
 import type { ChecklistItem } from '../../domain/types';
 import { BottomNav } from '../components/BottomNav';
+import { Icon } from '../components/icons';
 import { ItemMediaTools } from '../components/ItemMedia';
 import { MediaStrip } from '../components/MediaStrip';
 import { NoteField, type NoteFieldHandle } from '../components/NoteField';
@@ -26,15 +27,30 @@ function FindingRow({ auditId, auditNo, item, answer, media, lang }: { auditId: 
   const photos = media.filter((m) => m.type === 'photo').length;
   const label = RESULT_OPTIONS.find((o) => o.value === answer.result)?.label ?? '';
   return (
-    <li id={`finding-${item.id}`} class={`card finding-row is-${answer.result}`}>
+    <li id={`finding-${item.id}`} class="finding">
       <div class="finding-head">
         <button type="button" class="finding-id" onClick={() => void openItemInWalk(auditId, item.id, route)} aria-label={`Open ${item.id} in Walk`}>
           {item.id}
         </button>
-        <span class={`chip chip-result chip-${answer.result}`}>{label}</span>
-        {answer.repeated && <span class="chip chip-repeated">Repeated</span>}
-        {!answer.note.trim() && <span class="chip chip-missing">Missing note</span>}
-        {photos === 0 && <span class="chip chip-missing">Missing photo</span>}
+        <span class="finding-status">
+          <i class={`dot dot-${answer.result}`} aria-hidden="true" />
+          <span class={`status-word is-${answer.result}`}>{label}</span>
+        </span>
+        {answer.repeated && <span class="status-text">Repeated</span>}
+        <span class="finding-hints">
+          {!answer.note.trim() && (
+            <span class="hint">
+              <Icon name="warning" size={16} />
+              Missing note
+            </span>
+          )}
+          {photos === 0 && (
+            <span class="hint">
+              <Icon name="photo" size={16} />
+              Missing photo
+            </span>
+          )}
+        </span>
       </div>
       <p class="finding-question">{item.text}</p>
       <NoteField
@@ -46,7 +62,7 @@ function FindingRow({ auditId, auditNo, item, answer, media, lang }: { auditId: 
           handle.current = h;
         }}
       />
-      <div class="item-toolbar" role="toolbar" aria-label="Finding tools">
+      <div class="tool-row" role="toolbar" aria-label="Finding tools">
         <ItemMediaTools
           auditId={auditId}
           auditNo={auditNo}
@@ -94,9 +110,11 @@ export function Findings({ id }: { id: string }) {
     );
   }
 
+  const auditNo = view?.audit?.header.auditNo ?? '';
+
   return (
     <>
-      <TopBar title="Findings" back={paths.home()} subtitle={view?.audit?.header.auditNo || 'Untitled audit'} />
+      <TopBar title="Findings" back={paths.home()} subtitle={auditNo || 'Untitled audit'} />
       <main class="screen has-nav findings-desk">
         <nav class="findings-index" aria-label="Findings index">
           <ul>
@@ -110,23 +128,23 @@ export function Findings({ id }: { id: string }) {
             ))}
           </ul>
         </nav>
-        <div>
-        <section class="findings-section">
-          <div class="section-head">
-            <h2>Negative observations: {negatives.length}</h2>
-          </div>
-          {view && negatives.length === 0 ? (
-            <p class="empty">No negative observations yet. Items answered No or Partial appear here with their notes and photos.</p>
-          ) : (
-            <ul class="list">
-              {negatives.map(({ item, answer }) => (
-                <FindingRow key={item.id} auditId={id} auditNo={view?.audit?.header.auditNo ?? ''} item={item} answer={answer} media={mediaByOwner.get(ownerKey({ kind: 'item', itemId: item.id })) ?? []} lang={lang} />
-              ))}
-            </ul>
-          )}
-        </section>
+        <div class="findings-main">
+          <section class="panel">
+            <div class="panel-head">
+              <h2>Negative observations: {negatives.length}</h2>
+            </div>
+            {view && negatives.length === 0 ? (
+              <p class="empty">No negative observations yet. Questions answered No or Partial appear here with their notes and photos.</p>
+            ) : (
+              <ul class="rows findings-rows">
+                {negatives.map(({ item, answer }) => (
+                  <FindingRow key={item.id} auditId={id} auditNo={auditNo} item={item} answer={answer} media={mediaByOwner.get(ownerKey({ kind: 'item', itemId: item.id })) ?? []} lang={lang} />
+                ))}
+              </ul>
+            )}
+          </section>
 
-        <PositiveList auditId={id} auditNo={view?.audit?.header.auditNo ?? ''} positives={positives ?? []} mediaByOwner={mediaByOwner} lang={lang} />
+          <PositiveList auditId={id} auditNo={auditNo} positives={positives ?? []} mediaByOwner={mediaByOwner} lang={lang} />
         </div>
       </main>
       <BottomNav auditId={id} />

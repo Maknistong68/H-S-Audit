@@ -6,9 +6,11 @@ import { flushPendingWrites } from '../../db/flush';
 import { ownerKey } from '../../db/ids';
 import { repo } from '../../db/repo';
 import { snapshotIfDirty, startSnapshotTimer } from '../../db/snapshots';
+import { sentenceCase } from '../../domain/text';
 import type { ChecklistItem, Result } from '../../domain/types';
 import { Banner } from '../components/Banner';
 import { BottomNav } from '../components/BottomNav';
+import { Icon } from '../components/icons';
 import { ItemCard } from '../components/ItemCard';
 import { ItemMediaTools } from '../components/ItemMedia';
 import { JumpSheet } from '../components/JumpSheet';
@@ -23,10 +25,31 @@ import { useKeyboardShortcuts, type WalkShortcuts } from '../hooks/useKeyboardSh
 import { useLiveQuery } from '../hooks/useLiveQuery';
 import { DESK_QUERY, useMediaQuery } from '../hooks/useMediaQuery';
 import { paths } from '../paths';
-import { adjacentItem, DEFAULT_WALK_STATE, nextUnanswered, tagCounts, visibleRows, type WalkState } from '../walk/walkState';
+import { adjacentItem, DEFAULT_WALK_STATE, nextUnanswered, tagCounts, visibleRows, type WalkRow, type WalkState } from '../walk/walkState';
 
 const EXPORT_NUDGE_MS = 2 * 60 * 60 * 1000;
 const TOTAL = allItems().length;
+
+interface Group {
+  key: string;
+  letter?: string;
+  title?: string;
+  rows: WalkRow[];
+}
+
+/** Section rows become panels; subsection and item rows live inside them. */
+function groupRows(rows: WalkRow[]): Group[] {
+  const groups: Group[] = [];
+  for (const row of rows) {
+    if (row.kind === 'section') {
+      groups.push({ key: row.id, letter: row.id, title: sentenceCase(row.title ?? ''), rows: [] });
+    } else {
+      if (groups.length === 0) groups.push({ key: 'all', rows: [] });
+      groups[groups.length - 1].rows.push(row);
+    }
+  }
+  return groups;
+}
 
 function scrollToItem(id: string) {
   requestAnimationFrame(() => {
@@ -50,6 +73,7 @@ export function Walk({ id }: { id: string }) {
   const [interim, setInterim] = useState('');
   const noteHandle = useRef<NoteFieldHandle | null>(null);
   const searchBox = useRef<HTMLInputElement>(null);
+  const head = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -68,6 +92,20 @@ export function Walk({ id }: { id: string }) {
       void snapshotIfDirty(id, 'navigation').catch((err) => console.error(err));
     };
   }, [id]);
+
+  // Section headers stick just under the sticky head, whatever its current height.
+  useEffect(() => {
+    const el = head.current;
+    if (!el) return;
+    const apply = () => document.documentElement.style.setProperty('--walk-head-h', `${el.offsetHeight}px`);
+    apply();
+    const ro = new ResizeObserver(apply);
+    ro.observe(el);
+    return () => {
+      ro.disconnect();
+      document.documentElement.style.removeProperty('--walk-head-h');
+    };
+  }, []);
 
   const update = useCallback(
     (patch: Partial<WalkState>) => {
@@ -91,6 +129,7 @@ export function Walk({ id }: { id: string }) {
 
   const answers = view?.answers ?? new Map();
   const rows = useMemo(() => (state && tagsByItem ? visibleRows(state, answers, tagsByItem) : []), [state, answers, tagsByItem]);
+  const groups = useMemo(() => groupRows(rows), [rows]);
   const counts = useMemo(() => (tagsByItem ? tagCounts(tagsByItem, answers) : new Map()), [tagsByItem, answers]);
 
   const answered = [...answers.values()].filter((a) => a.result !== undefined).length;
@@ -201,25 +240,31 @@ export function Walk({ id }: { id: string }) {
 
   const list = (
     <div class="walk-list">
-      {rows.map((row) => {
-        if (row.kind === 'section') {
-          return (
-            <h2 key={`s-${row.id}`} class="walk-section">
-              {row.id} · {row.title}
-            </h2>
-          );
-        }
-        if (row.kind === 'subsection') {
-          return (
-            <h3 key={`ss-${row.id}`} class="walk-subsection">
-              {row.id} · {row.title}
-            </h3>
-          );
-        }
-        const item = row.item!;
-        // On the desk layout the list stays compact; the expanded card lives in the detail pane.
-        return renderCard(item, !desk && expandedVisible && expandedId === item.id);
-      })}
+      {groups.map((g) => (
+        <section class="panel walk-panel" key={g.key}>
+          {g.letter && (
+            <header class="walk-section">
+              <span class="letter">{g.letter}</span>
+              <h2>{g.title}</h2>
+            </header>
+          )}
+          <div class="walk-rows">
+            {g.rows.map((row) => {
+              if (row.kind === 'subsection') {
+                return (
+                  <h3 key={`ss-${row.id}`} class="walk-subsection">
+                    <span class="sub-id">{row.id}</span>
+                    <span>{row.title}</span>
+                  </h3>
+                );
+              }
+              const item = row.item!;
+              // On the desk layout the list stays compact; the expanded card lives in the detail pane.
+              return renderCard(item, !desk && expandedVisible && expandedId === item.id);
+            })}
+          </div>
+        </section>
+      ))}
     </div>
   );
 
@@ -230,22 +275,32 @@ export function Walk({ id }: { id: string }) {
         back={paths.home()}
         subtitle={audit?.header.auditNo || 'Untitled audit'}
         right={
-          <button type="button" class="btn btn-ghost btn-sm" onClick={() => setJumpOpen(true)}>
+          <button type="button" class="btn btn-quiet btn-sm" onClick={() => setJumpOpen(true)}>
+            <Icon name="jump" size={20} />
             Jump to
           </button>
         }
       />
 
-      <div class="walk-head">
+      <div class="walk-head" ref={head}>
         {state && <ModeSwitch value={state.mode} onChange={setMode} />}
-        <ProgressLine answered={answered} flagged={flagged} total={TOTAL} />
+        <div class="walk-status">
+          <ProgressLine answered={answered} flagged={flagged} total={TOTAL} />
+          {state && (
+            <label class="switch remaining-toggle">
+              <input type="checkbox" checked={state.remainingOnly} onChange={(e) => update({ remainingOnly: (e.currentTarget as HTMLInputElement).checked })} />
+              <span class="switch-track" aria-hidden="true" />
+              <span class="switch-label">Remaining only</span>
+            </label>
+          )}
+        </div>
         {state?.mode === 'area' && (
           <div class="chip-row" role="group" aria-label="Areas">
             {tagList.map((t) => {
               const c = counts.get(t.id) ?? { total: 0, done: 0 };
               return (
                 <button key={t.id} type="button" class="tag-chip" aria-pressed={state.tag === t.id} onClick={() => update({ tag: state.tag === t.id ? null : t.id })}>
-                  {t.label}{' '}
+                  {t.label}
                   <span class="tag-count">
                     {c.done}/{c.total}
                   </span>
@@ -259,6 +314,7 @@ export function Walk({ id }: { id: string }) {
             <label for="walk-search" class="visually-hidden">
               Search questions
             </label>
+            <Icon name="search" size={18} class="search-icon" />
             <input
               id="walk-search"
               ref={searchBox}
@@ -268,12 +324,6 @@ export function Walk({ id }: { id: string }) {
               onInput={(e) => update({ query: (e.currentTarget as HTMLInputElement).value })}
             />
           </div>
-        )}
-        {state && (
-          <label class="check-row remaining-toggle">
-            <input type="checkbox" checked={state.remainingOnly} onChange={(e) => update({ remainingOnly: (e.currentTarget as HTMLInputElement).checked })} />
-            <span>Remaining only</span>
-          </label>
         )}
       </div>
 
@@ -289,14 +339,14 @@ export function Walk({ id }: { id: string }) {
             {state.mode === 'area' && !state.tag && <p class="empty">Pick an area above to see its questions.</p>}
             {state.mode === 'search' && state.query.trim() && rows.length === 0 && <p class="empty">Nothing matches “{state.query}”.</p>}
             {state.mode === 'search' && !state.query.trim() && <p class="empty">Type an id, a word from a question, or something from your notes.</p>}
-            {state.mode === 'sequence' && rows.length === 0 && <p class="empty">Every question is answered. Uncheck “Remaining only” to review.</p>}
+            {state.mode === 'sequence' && rows.length === 0 && <p class="empty">Every question is answered. Turn off “Remaining only” to review.</p>}
 
             {desk ? (
               <div class="walk-panes">
                 {list}
                 <div class="walk-detail" data-testid="walk-detail">
                   {expandedItem ? (
-                    renderCard(expandedItem, true, `detail-${expandedItem.id}`)
+                    <div class="panel">{renderCard(expandedItem, true, `detail-${expandedItem.id}`)}</div>
                   ) : (
                     <p class="empty">
                       Select a question on the left. Keys: <kbd>1</kbd>–<kbd>4</kbd> result, <kbd>j</kbd>/<kbd>k</kbd> next/previous, <kbd>f</kbd> flag.

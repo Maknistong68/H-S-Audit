@@ -3,6 +3,7 @@ import type { MediaOwner } from '../../db/db';
 import { ownerKey } from '../../db/ids';
 import { repo } from '../../db/repo';
 import { createMemoRecorder } from '../../media/audio';
+import { Icon } from './icons';
 import { toast } from './toast';
 
 export function formatClock(ms: number): string {
@@ -60,8 +61,15 @@ export function MemoButton({ auditId, owner }: { auditId: string; owner: MediaOw
   }
 
   return (
-    <button type="button" class={`btn btn-sm${recording ? ' is-recording' : ''}`} aria-pressed={recording} onClick={toggle}>
-      {recording ? `Stop recording ${formatClock(elapsed)}` : 'Record memo'}
+    <button
+      type="button"
+      class={`icon-btn${recording ? ' is-live' : ''}`}
+      aria-pressed={recording}
+      aria-label={recording ? `Stop recording ${formatClock(elapsed)}` : 'Record memo'}
+      onClick={toggle}
+    >
+      <Icon name="mic" />
+      <span class="caption">{recording ? formatClock(elapsed) : 'Memo'}</span>
     </button>
   );
 }

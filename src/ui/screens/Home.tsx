@@ -4,6 +4,7 @@ import { importBackup } from '../../db/backup';
 import { PURGE_FALLBACK_WORD, repo, type AuditSummary } from '../../db/repo';
 import { useLiveQuery } from '../hooks/useLiveQuery';
 import { paths } from '../paths';
+import { Icon } from '../components/icons';
 import { ProgressRing } from '../components/ProgressRing';
 import { Sheet } from '../components/Sheet';
 import { toast } from '../components/toast';
@@ -65,66 +66,85 @@ export function Home() {
       <TopBar
         title="HSE Audit"
         right={
-          <a href={paths.settings()} class="btn btn-ghost btn-sm topbar-link">
+          <a href={paths.settings()} class="btn btn-quiet btn-sm topbar-link">
+            <Icon name="settings" size={20} />
             Settings
           </a>
         }
       />
       <main class="screen">
-        <div class="actions-row">
+        <div class="actions-row home-actions">
           <button type="button" class="btn btn-primary" onClick={newAudit}>
+            <Icon name="plus" size={18} />
             New audit
           </button>
           <button type="button" class="btn" onClick={() => fileInput.current?.click()}>
+            <Icon name="import" size={18} />
             Import backup
           </button>
           <input ref={fileInput} type="file" accept=".zip,application/zip" class="visually-hidden" aria-label="Backup file" onChange={onImportFile} />
-          <button type="button" class="btn btn-ghost" onClick={() => setShowArchived((v) => !v)} aria-pressed={showArchived}>
-            {showArchived ? 'Hide archived' : 'Show archived'}
-          </button>
         </div>
 
         {audits === undefined ? null : audits.length === 0 ? (
-          <p class="empty">No audits yet. Tap <strong>New audit</strong> to start one, or import a backup.</p>
+          <section class="panel">
+            <p class="empty">
+              No audits yet. Tap <strong>New audit</strong> to start one, or import a backup from another phone.
+            </p>
+          </section>
         ) : (
-          <ul class="list" aria-label="Audits">
-            {audits.map((a) => (
-              <li key={a.id} class="card audit-row">
-                <ProgressRing value={a.answered} total={a.total} />
-                <a href={a.header.auditNo ? paths.walk(a.id) : paths.header(a.id)} class="audit-row-main">
-                  <span class="audit-row-title">{a.header.auditNo || 'Untitled audit'}</span>
-                  <span class="audit-row-meta">
-                    {a.header.contractorWo || 'No contractor'} · {formatDate(a.header.auditDate)}
-                  </span>
-                  <span class={`chip chip-${a.status}`}>{STATUS_LABEL[a.status]}</span>
-                  {a.flagged > 0 && <span class="chip chip-flag">{a.flagged} flagged</span>}
-                </a>
-                <div class="audit-row-actions">
-                  {a.status === 'archived' ? (
-                    <>
-                      <button type="button" class="btn btn-sm" onClick={() => repo.setStatus(a.id, 'draft')}>
-                        Restore to drafts
+          <section class="panel">
+            <ul class="rows" aria-label="Audits">
+              {audits.map((a) => (
+                <li key={a.id} class="list-row audit-row">
+                  <ProgressRing value={a.answered} total={a.total} size={40} />
+                  <a href={a.header.auditNo ? paths.walk(a.id) : paths.header(a.id)} class="list-row-main">
+                    <span class="list-row-title">{a.header.auditNo || 'Untitled audit'}</span>
+                    <span class="list-row-meta">{a.header.contractorWo || 'No contractor yet'}</span>
+                    <span class="audit-row-facts">
+                      <span>{formatDate(a.header.auditDate)}</span>
+                      <span class={`status-text${a.status === 'final' ? ' is-final' : ''}`}>{STATUS_LABEL[a.status]}</span>
+                      {a.flagged > 0 && <span class="status-text">{a.flagged} flagged</span>}
+                    </span>
+                  </a>
+                  <div class="list-row-side">
+                    <Icon name="chevron-right" size={20} class="row-chevron" />
+                    {a.status === 'archived' ? (
+                      <>
+                        <button type="button" class="btn btn-sm btn-quiet" onClick={() => repo.setStatus(a.id, 'draft')}>
+                          Restore to drafts
+                        </button>
+                        <button
+                          type="button"
+                          class="btn btn-sm btn-danger"
+                          onClick={() => {
+                            setTyped('');
+                            setPurgeTarget(a);
+                          }}
+                        >
+                          Purge…
+                        </button>
+                      </>
+                    ) : (
+                      <button type="button" class="btn btn-sm btn-quiet" onClick={() => repo.archiveAudit(a.id)}>
+                        Archive
                       </button>
-                      <button type="button" class="btn btn-sm btn-danger" onClick={() => { setTyped(''); setPurgeTarget(a); }}>
-                        Purge…
-                      </button>
-                    </>
-                  ) : (
-                    <button type="button" class="btn btn-sm btn-ghost" onClick={() => repo.archiveAudit(a.id)}>
-                      Archive
-                    </button>
-                  )}
-                </div>
-              </li>
-            ))}
-          </ul>
+                    )}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </section>
         )}
+
+        <div class="home-footer">
+          <button type="button" class="btn btn-quiet btn-sm" onClick={() => setShowArchived((v) => !v)} aria-pressed={showArchived}>
+            {showArchived ? 'Hide archived' : 'Show archived'}
+          </button>
+        </div>
       </main>
 
       <Sheet open={purgeTarget !== null} title="Purge audit" onClose={() => setPurgeTarget(null)}>
-        <p>
-          This permanently deletes the audit, its notes, photos, memos and snapshots. It cannot be undone.
-        </p>
+        <p>This permanently deletes the audit, its notes, photos, memos and snapshots. It cannot be undone.</p>
         <p>
           Type <strong>{expectedWord}</strong> to confirm.
         </p>
@@ -133,10 +153,10 @@ export function Home() {
           <input id="purge-confirm" type="text" autocomplete="off" value={typed} onInput={(e) => setTyped((e.currentTarget as HTMLInputElement).value)} />
         </div>
         <div class="actions-row">
-          <button type="button" class="btn btn-danger" disabled={!canPurge} onClick={purge}>
+          <button type="button" class="btn btn-danger btn-primary" disabled={!canPurge} onClick={purge}>
             Purge permanently
           </button>
-          <button type="button" class="btn btn-ghost" onClick={() => setPurgeTarget(null)}>
+          <button type="button" class="btn btn-quiet" onClick={() => setPurgeTarget(null)}>
             Keep audit
           </button>
         </div>

@@ -5,6 +5,7 @@ import { processPhoto, UnsupportedPhotoError } from '../../media/photo';
 import { PHOTO_COPIES_SETTING, photoCopyFilename } from '../../media/photoCopy';
 import { downloadBytes } from '../download';
 import { useLiveQuery } from '../hooks/useLiveQuery';
+import { Icon } from './icons';
 import { toast } from './toast';
 
 /**
@@ -39,8 +40,9 @@ export function PhotoButton({ auditId, auditNo, owner }: { auditId: string; audi
 
   return (
     <>
-      <button type="button" class="btn btn-sm" disabled={busy} onClick={() => input.current?.click()}>
-        {busy ? 'Saving…' : 'Photo'}
+      <button type="button" class="icon-btn" disabled={busy} onClick={() => input.current?.click()}>
+        <Icon name="camera" />
+        <span class="caption">{busy ? 'Saving' : 'Photo'}</span>
       </button>
       <input ref={input} type="file" accept="image/*" multiple class="visually-hidden" aria-label="Add photo" onChange={onChange} />
     </>

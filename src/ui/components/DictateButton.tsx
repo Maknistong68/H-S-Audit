@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'preact/hooks';
 import { createDictation, dictationAvailable, type Dictation } from '../../media/dictation';
+import { Icon } from './icons';
 import { toast } from './toast';
 
 export function DictateButton(props: { lang: string; onText(text: string): void; onInterim(text: string): void }) {
@@ -50,13 +51,15 @@ export function DictateButton(props: { lang: string; onText(text: string): void;
   return (
     <button
       type="button"
-      class="btn btn-sm"
+      class={`icon-btn${on ? ' is-live' : ''}`}
       disabled={!available}
       title={available ? undefined : 'Needs mobile signal'}
       aria-pressed={on}
+      aria-label={on ? 'Stop dictating' : 'Dictate'}
       onClick={() => (on ? dictation.current?.stop() : start())}
     >
-      {on ? 'Stop dictating' : 'Dictate'}
+      <Icon name="dictate" />
+      <span class="caption">{on ? 'Listening' : 'Dictate'}</span>
     </button>
   );
 }

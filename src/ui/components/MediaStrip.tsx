@@ -5,6 +5,7 @@ import { photoCopyFilename } from '../../media/photoCopy';
 import { saveOrShare } from '../download';
 import { useLiveQuery } from '../hooks/useLiveQuery';
 import { useObjectUrl } from '../hooks/useObjectUrl';
+import { Icon } from './icons';
 import { formatClock } from './MemoButton';
 import { Sheet } from './Sheet';
 import { toast } from './toast';
@@ -35,8 +36,8 @@ function AudioRow({ media, index, onRemove }: { media: MediaRow; index: number; 
   return (
     <div class="audio-row">
       <audio controls src={url} preload="metadata" aria-label={`Memo ${index}`} />
-      <span class="muted">{media.durationMs ? formatClock(media.durationMs) : ''}</span>
-      <button type="button" class="btn btn-sm btn-ghost" aria-label={`Remove memo ${index}`} onClick={onRemove}>
+      <span class="muted small">{media.durationMs ? formatClock(media.durationMs) : ''}</span>
+      <button type="button" class="btn btn-quiet btn-sm" aria-label={`Remove memo ${index}`} onClick={onRemove}>
         Remove
       </button>
     </div>
@@ -75,7 +76,7 @@ export function MediaStrip({ media, auditNo }: { media: MediaRow[]; auditNo: str
             <li key={m.id}>
               <Thumb media={m} index={i + 1} onOpen={() => setOpen(i)} />
               <button type="button" class="thumb-remove" aria-label={`Remove photo ${i + 1}`} onClick={() => remove(m, 'Photo')}>
-                ×
+                <Icon name="x" size={14} />
               </button>
               <button type="button" class="thumb-share" aria-label={`Share photo ${i + 1}`} onClick={() => void share(m, auditNo)}>
                 Share
@@ -84,14 +85,19 @@ export function MediaStrip({ media, auditNo }: { media: MediaRow[]; auditNo: str
           ))}
         </ul>
       )}
-      {audio.map((m, i) => (
-        <AudioRow key={m.id} media={m} index={i + 1} onRemove={() => remove(m, 'Memo')} />
-      ))}
+      {audio.length > 0 && (
+        <div class="audio-list">
+          {audio.map((m, i) => (
+            <AudioRow key={m.id} media={m} index={i + 1} onRemove={() => remove(m, 'Memo')} />
+          ))}
+        </div>
+      )}
       <Sheet open={openPhoto !== undefined && openPhoto !== null} title={`Photo ${(open ?? 0) + 1} of ${photos.length}`} onClose={() => setOpen(null)}>
         {openPhoto && <FullPhoto media={openPhoto} index={(open ?? 0) + 1} />}
         {openPhoto && (
           <div class="actions-row">
             <button type="button" class="btn" onClick={() => void share(openPhoto, auditNo)}>
+              <Icon name="share" size={18} />
               Share / save to Photos
             </button>
           </div>

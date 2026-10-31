@@ -14,28 +14,56 @@ function TagRow({ tag }: { tag: Tag }) {
     setEditing(false);
   }
 
-  return (
-    <li class="tag-manager-row">
-      {editing ? (
-        <form class="tag-form" onSubmit={(e) => { e.preventDefault(); void save(); }}>
-          <div class="field">
-            <label for={`rename-${tag.id}`}>Rename {tag.label}</label>
-            <input id={`rename-${tag.id}`} value={label} onInput={(e) => setLabel((e.currentTarget as HTMLInputElement).value)} />
-          </div>
-          <button type="submit" class="btn btn-sm btn-primary">Save name</button>
-          <button type="button" class="btn btn-sm btn-ghost" onClick={() => { setLabel(tag.label); setEditing(false); }}>Cancel</button>
-        </form>
-      ) : (
-        <>
-          <span>
-            {tag.label}
-            {!tag.builtIn && <span class="chip">custom</span>}
-          </span>
-          <button type="button" class="btn btn-sm btn-ghost" onClick={() => setEditing(true)}>
-            Rename
+  // Renaming happens in place: the input takes the label's spot and the row keeps its height, so nothing below moves.
+  if (editing) {
+    return (
+      <li class="list-row tag-row">
+        <form
+          class="inline-edit"
+          onSubmit={(e) => {
+            e.preventDefault();
+            void save();
+          }}
+        >
+          <input
+            class="inline-input"
+            aria-label={`Rename ${tag.label}`}
+            value={label}
+            autoFocus
+            onInput={(e) => setLabel((e.currentTarget as HTMLInputElement).value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Escape') {
+                setLabel(tag.label);
+                setEditing(false);
+              }
+            }}
+          />
+          <button type="submit" class="btn btn-sm btn-primary">
+            Save
           </button>
-        </>
-      )}
+          <button
+            type="button"
+            class="btn btn-sm btn-quiet"
+            onClick={() => {
+              setLabel(tag.label);
+              setEditing(false);
+            }}
+          >
+            Cancel
+          </button>
+        </form>
+      </li>
+    );
+  }
+  return (
+    <li class="list-row tag-row">
+      <span class="list-row-main">
+        <span>{tag.label}</span>
+        {!tag.builtIn && <span class="list-row-meta">Custom tag</span>}
+      </span>
+      <button type="button" class="btn btn-sm btn-quiet" onClick={() => setEditing(true)}>
+        Rename
+      </button>
     </li>
   );
 }
@@ -58,29 +86,41 @@ export function TagManager({ tags }: { tags: Tag[] }) {
   }
 
   return (
-    <section class="findings-section">
-      <div class="section-head">
+    <section class="panel">
+      <div class="panel-head">
         <h2>Tags</h2>
         <button type="button" class="btn btn-sm" onClick={() => setAdding(true)} aria-expanded={adding}>
           Add tag
         </button>
       </div>
-      <p class="muted small">Areas you can walk by. Questions get tags from the Tags button on each card.</p>
       {adding && (
-        <form class="tag-form" onSubmit={(e) => { e.preventDefault(); void add(); }}>
+        <form
+          class="tag-form panel-body"
+          onSubmit={(e) => {
+            e.preventDefault();
+            void add();
+          }}
+        >
           <div class="field">
             <label for="new-tag">Tag name</label>
             <input id="new-tag" value={name} autocomplete="off" onInput={(e) => setName((e.currentTarget as HTMLInputElement).value)} />
           </div>
-          <button type="submit" class="btn btn-sm btn-primary">Save tag</button>
-          <button type="button" class="btn btn-sm btn-ghost" onClick={() => setAdding(false)}>Cancel</button>
+          <div class="actions-row">
+            <button type="submit" class="btn btn-sm btn-primary">
+              Save tag
+            </button>
+            <button type="button" class="btn btn-sm btn-quiet" onClick={() => setAdding(false)}>
+              Cancel
+            </button>
+          </div>
         </form>
       )}
-      <ul class="list tag-manager">
+      <ul class="rows">
         {tags.map((t) => (
           <TagRow key={t.id} tag={t} />
         ))}
       </ul>
+      <p class="panel-note">Areas you can walk by. Questions get their tags from the Tags button on each question.</p>
     </section>
   );
 }

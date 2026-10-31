@@ -4,15 +4,16 @@ import type { AuditHeader as HeaderFields } from '../../db/db';
 import { repo } from '../../db/repo';
 import { useAudit } from '../hooks/useAudit';
 import { paths } from '../paths';
+import { Icon } from '../components/icons';
 import { toast } from '../components/toast';
 import { TopBar } from '../components/TopBar';
 
-const FIELDS: { key: keyof HeaderFields; label: string; type?: string; autocomplete?: string }[] = [
-  { key: 'contractorWo', label: 'Contractor / WO' },
-  { key: 'projectName', label: 'Project name' },
-  { key: 'auditors', label: 'Auditors' },
-  { key: 'auditDate', label: 'Audit date', type: 'date' },
+const FIELDS: { key: keyof HeaderFields; label: string; type?: string; wide?: boolean }[] = [
   { key: 'auditNo', label: 'Audit no' },
+  { key: 'auditDate', label: 'Audit date', type: 'date' },
+  { key: 'contractorWo', label: 'Contractor / WO', wide: true },
+  { key: 'projectName', label: 'Project name', wide: true },
+  { key: 'auditors', label: 'Auditors', wide: true },
   { key: 'contactNumber', label: 'Contact number', type: 'tel' },
 ];
 
@@ -50,28 +51,34 @@ export function AuditHeader({ id }: { id: string }) {
 
   return (
     <>
-      <TopBar title="Audit header" back={paths.home()} subtitle={form?.auditNo || undefined} />
+      <TopBar title="Audit header" back={paths.home()} subtitle={form?.auditNo || 'New audit'} />
       <main class="screen">
         {form && (
-          <form class="form" onSubmit={(e) => { e.preventDefault(); route(paths.walk(id)); }}>
-            {FIELDS.map((f) => (
-              <div class="field" key={f.key}>
-                <label for={`hdr-${f.key}`}>{f.label}</label>
-                <input
-                  id={`hdr-${f.key}`}
-                  type={f.type ?? 'text'}
-                  value={form[f.key]}
-                  autocomplete="off"
-                  onInput={(e) => update(f.key, (e.currentTarget as HTMLInputElement).value)}
-                />
-              </div>
-            ))}
-            <p class="save-status" role="status">
-              {inflight > 0 ? 'Saving…' : 'All changes saved'}
-            </p>
-            <div class="actions-row">
-              <button type="submit" class="btn btn-primary">
+          <form
+            class="panel"
+            onSubmit={(e) => {
+              e.preventDefault();
+              route(paths.walk(id));
+            }}
+          >
+            <div class="panel-head">
+              <h2>Audit details</h2>
+              <span class="save-status" role="status">
+                {inflight > 0 ? 'Saving…' : 'All changes saved'}
+              </span>
+            </div>
+            <div class="panel-body field-grid">
+              {FIELDS.map((f) => (
+                <div class={`field${f.wide ? ' span-2' : ''}`} key={f.key}>
+                  <label for={`hdr-${f.key}`}>{f.label}</label>
+                  <input id={`hdr-${f.key}`} type={f.type ?? 'text'} value={form[f.key]} autocomplete="off" onInput={(e) => update(f.key, (e.currentTarget as HTMLInputElement).value)} />
+                </div>
+              ))}
+            </div>
+            <div class="panel-body panel-actions">
+              <button type="submit" class="btn btn-primary btn-block">
                 Start walk
+                <Icon name="next" size={18} />
               </button>
             </div>
           </form>

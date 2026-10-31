@@ -1,11 +1,40 @@
 import type { ComponentChildren } from 'preact';
-import { useEffect, useRef } from 'preact/hooks';
+import { useEffect, useRef, useState } from 'preact/hooks';
 
 const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+const EXIT_MS = 150;
 
+/**
+ * Bottom sheet. Opens with a slide-up, closes with a short slide-down; Escape and the Close button act
+ * immediately (the exit animation only follows). Focus is trapped while open and restored on close.
+ */
 export function Sheet(props: { open: boolean; title: string; onClose(): void; children: ComponentChildren }) {
   const panel = useRef<HTMLDivElement>(null);
   const restoreTo = useRef<Element | null>(null);
+  const [mounted, setMounted] = useState(props.open);
+  const [closing, setClosing] = useState(false);
+
+  // Keep rendering for the exit animation after `open` turns false.
+  useEffect(() => {
+    if (props.open) {
+      setMounted(true);
+      setClosing(false);
+      return;
+    }
+    if (!mounted) return;
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduced) {
+      setMounted(false);
+      return;
+    }
+    setClosing(true);
+    const t = setTimeout(() => {
+      setMounted(false);
+      setClosing(false);
+    }, EXIT_MS);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [props.open]);
 
   useEffect(() => {
     if (!props.open) return;
@@ -43,21 +72,23 @@ export function Sheet(props: { open: boolean; title: string; onClose(): void; ch
     };
   }, [props.open]);
 
-  if (!props.open) return null;
+  if (!mounted) return null;
   return (
-    <div class="sheet-backdrop" onClick={props.onClose}>
+    <div class={`sheet-backdrop${closing ? ' closing' : ''}`} onClick={props.onClose}>
       <div
         class="sheet"
         role="dialog"
         aria-modal="true"
         aria-label={props.title}
+        aria-hidden={closing ? 'true' : undefined}
         ref={panel}
         tabIndex={-1}
         onClick={(e) => e.stopPropagation()}
       >
+        <div class="sheet-handle" aria-hidden="true" />
         <div class="sheet-head">
           <h2>{props.title}</h2>
-          <button type="button" class="btn btn-ghost btn-sm" onClick={props.onClose}>
+          <button type="button" class="btn btn-quiet btn-sm" onClick={props.onClose}>
             Close
           </button>
         </div>

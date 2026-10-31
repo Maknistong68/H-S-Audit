@@ -31,23 +31,22 @@ export function SnapshotList({ auditId, snapshots }: { auditId: string; snapshot
   }
 
   return (
-    <section class="findings-section">
-      <div class="section-head">
+    <section class="panel">
+      <div class="panel-head">
         <h2>Snapshots</h2>
         <button type="button" class="btn btn-sm" onClick={() => void takeSnapshot(auditId, 'manual').then(() => toast('Snapshot taken'))}>
           Take snapshot now
         </button>
       </div>
-      <p class="muted small">Restore points taken every 15 minutes while you work and whenever you leave Walk. The last 40 are kept.</p>
       {snapshots.length === 0 ? (
-        <p class="empty">No snapshots yet.</p>
+        <p class="empty">No snapshots yet. One is taken every 15 minutes while you work and whenever you leave Walk.</p>
       ) : (
-        <ul class="list snapshot-list">
+        <ul class="rows">
           {snapshots.map((s) => (
-            <li key={s.id} class="snapshot-row">
-              <span>
-                <strong>{formatWhen(s.createdAt)}</strong>
-                <span class="muted"> · {REASON_LABEL[s.reason]}</span>
+            <li key={s.id} class="list-row snapshot-row">
+              <span class="list-row-main">
+                <span class="snapshot-when">{formatWhen(s.createdAt)}</span>
+                <span class="list-row-meta">{REASON_LABEL[s.reason]}</span>
               </span>
               <button type="button" class="btn btn-sm" onClick={() => setConfirm(s)}>
                 Restore
@@ -56,6 +55,7 @@ export function SnapshotList({ auditId, snapshots }: { auditId: string; snapshot
           ))}
         </ul>
       )}
+      <p class="panel-note">Restore points taken every 15 minutes while you work and whenever you leave Walk. The last 40 are kept.</p>
       <Sheet open={confirm !== null} title="Restore snapshot" onClose={() => setConfirm(null)}>
         {confirm && (
           <p>
@@ -67,7 +67,7 @@ export function SnapshotList({ auditId, snapshots }: { auditId: string; snapshot
           <button type="button" class="btn btn-primary" onClick={restore}>
             Restore this snapshot
           </button>
-          <button type="button" class="btn btn-ghost" onClick={() => setConfirm(null)}>
+          <button type="button" class="btn btn-quiet" onClick={() => setConfirm(null)}>
             Keep current
           </button>
         </div>

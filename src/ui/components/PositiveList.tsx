@@ -3,6 +3,7 @@ import type { MediaRow, Positive } from '../../db/db';
 import { flushPendingWrites } from '../../db/flush';
 import { ownerKey } from '../../db/ids';
 import { repo } from '../../db/repo';
+import { Icon } from './icons';
 import { ItemMediaTools } from './ItemMedia';
 import { MediaStrip } from './MediaStrip';
 import { NoteField, type NoteFieldHandle } from './NoteField';
@@ -13,7 +14,7 @@ function PositiveRow({ auditId, auditNo, positive, media, lang }: { auditId: str
   const handle = useRef<NoteFieldHandle | null>(null);
   const owner = { kind: 'positive', positiveId: positive.id } as const;
   return (
-    <li class="card finding-row">
+    <li class="finding">
       <NoteField
         id={`pos:${positive.id}`}
         label="Positive observation"
@@ -25,7 +26,7 @@ function PositiveRow({ auditId, auditNo, positive, media, lang }: { auditId: str
           handle.current = h;
         }}
       />
-      <div class="item-toolbar" role="toolbar" aria-label="Evidence tools">
+      <div class="tool-row" role="toolbar" aria-label="Evidence tools">
         <ItemMediaTools
           auditId={auditId}
           auditNo={auditNo}
@@ -36,7 +37,7 @@ function PositiveRow({ auditId, auditNo, positive, media, lang }: { auditId: str
         />
         <button
           type="button"
-          class="btn btn-sm btn-ghost"
+          class="icon-btn"
           onClick={() =>
             void repo.removePositive(positive.id).then(() =>
               toast('Positive observation removed', {
@@ -46,7 +47,8 @@ function PositiveRow({ auditId, auditNo, positive, media, lang }: { auditId: str
             )
           }
         >
-          Remove
+          <Icon name="trash" />
+          <span class="caption">Remove</span>
         </button>
       </div>
       <MediaStrip media={media} auditNo={auditNo} />
@@ -56,17 +58,18 @@ function PositiveRow({ auditId, auditNo, positive, media, lang }: { auditId: str
 
 export function PositiveList({ auditId, auditNo, positives, mediaByOwner, lang }: { auditId: string; auditNo: string; positives: Positive[]; mediaByOwner: Map<string, MediaRow[]>; lang: string }) {
   return (
-    <section class="findings-section">
-      <div class="section-head">
+    <section class="panel">
+      <div class="panel-head">
         <h2>Positive observations: {positives.length}</h2>
         <button type="button" class="btn btn-sm" onClick={() => void repo.addPositive(auditId, '')}>
+          <Icon name="plus" size={18} />
           Add positive observation
         </button>
       </div>
       {positives.length === 0 ? (
-        <p class="empty">Good practice seen on site goes here — it ends up in Part 3 of the report.</p>
+        <p class="empty">Good practice seen on site goes here. It ends up in Part 3 of the report.</p>
       ) : (
-        <ul class="list">
+        <ul class="rows findings-rows">
           {positives.map((p) => (
             <PositiveRow key={p.id} auditId={auditId} auditNo={auditNo} positive={p} media={mediaByOwner.get(ownerKey({ kind: 'positive', positiveId: p.id })) ?? []} lang={lang} />
           ))}

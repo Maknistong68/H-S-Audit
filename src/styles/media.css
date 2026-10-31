@@ -1,7 +1,7 @@
 .media-strip {
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
+  gap: var(--space-3);
 }
 
 .photo-grid {
@@ -10,7 +10,7 @@
   padding: 0;
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-2);
+  gap: var(--space-3) var(--space-2);
 }
 
 .photo-grid li {
@@ -18,26 +18,16 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2px;
-}
-
-.thumb-share {
-  min-height: 36px;
-  padding: 0 var(--space-2);
-  border: 0;
-  background: transparent;
-  color: var(--accent);
-  font-size: var(--text-sm);
-  font-weight: 600;
+  gap: 0;
 }
 
 .thumb {
   display: block;
-  width: 88px;
-  height: 88px;
+  width: 80px;
+  height: 80px;
   padding: 0;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
   overflow: hidden;
   background: var(--surface-2);
 }
@@ -47,21 +37,23 @@
   height: 100%;
   object-fit: cover;
   display: block;
+  animation: fade-in var(--motion-200) var(--ease-out);
 }
 
 .thumb-remove {
   position: absolute;
   top: -10px;
   right: -10px;
-  width: 36px;
-  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
-  border: 1px solid var(--border);
+  border: 1px solid var(--line-strong);
   background: var(--surface);
-  color: var(--danger);
-  font-size: 1.1rem;
-  line-height: 1;
-  box-shadow: var(--shadow);
+  color: var(--ink);
+  box-shadow: var(--shadow-1);
 }
 
 /* visual size stays small over the thumbnail; the tap area is the full 48 px */
@@ -69,17 +61,33 @@
 .thumb-share::after {
   content: '';
   position: absolute;
-  inset: -6px;
+  inset: -8px;
 }
 
 .thumb-share {
   position: relative;
+  min-height: 36px;
+  padding: 0 var(--space-2);
+  border: 0;
+  background: transparent;
+  color: var(--accent);
+  font-size: var(--text-sm);
+  font-weight: 500;
 }
 
 .photo-full {
   width: 100%;
   height: auto;
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius);
+}
+
+.audio-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.audio-list .audio-row + .audio-row {
+  border-top: 1px solid var(--line);
 }
 
 .audio-row {
@@ -87,30 +95,11 @@
   align-items: center;
   gap: var(--space-2);
   flex-wrap: wrap;
+  padding: var(--space-1) 0;
 }
 
 .audio-row audio {
   flex: 1 1 200px;
   min-width: 0;
   height: 40px;
-}
-
-.btn.is-recording {
-  border-color: var(--danger);
-  color: var(--danger);
-}
-
-.btn.is-recording::before {
-  content: '';
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: var(--danger);
-  animation: pulse 1s infinite;
-}
-
-@keyframes pulse {
-  50% {
-    opacity: 0.3;
-  }
 }
