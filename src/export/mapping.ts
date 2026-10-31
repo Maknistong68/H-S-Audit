@@ -33,6 +33,16 @@ export const PART3 = {
 
 export const COUNT_CELLS = { negative: 'H152', positive: 'P152' } as const;
 
+/** Live formulas, the same ones Book2 uses, so Part 3 follows Part 1 when answers are edited in Excel. */
+export const PART3_FORMULAS = {
+  id: (row: number) => `B${row}`,
+  question: (row: number) => `C${row}`,
+  note: (row: number) => `IF(OR(T${row}="No",T${row}="Partial"),IF(U${row}="","",U${row}),"")`,
+  evidence: (row: number) => `IF(T${row}="Full","COMPLIANT",IF(T${row}="N/A","N/A",""))`,
+  negativeCount: 'COUNTIF(T9:T109,"No")+COUNTIF(T9:T109,"Partial")',
+  positiveCount: 'COUNTIF(C239:C322,"Positive")',
+} as const;
+
 /** Part 1 "Section Score" / subsection score cells (cached ratio). */
 export const PART1_SCORE_CELL: Record<string, string> = {
   A: 'S24', B: 'S75', C: 'S110',
@@ -49,14 +59,12 @@ export const PART2_ROW: Record<string, number> = {
 
 export const OVERALL_CELL = 'R137';
 
-export const PHOTO = { widthPx: 110, heightPx: 82, perLine: 2, maxPerItem: 8, gapPx: 6 } as const;
+/** At most this many photos of one question are combined into its single in-cell picture. */
+export const MAX_PHOTOS_PER_CELL = 4;
 
-/** Widths (Excel character units) of the evidence columns R, S, T in the template. */
-export const EVIDENCE_COL_WIDTHS_CHARS = [8, 9.140625, 17.28515625];
+/** Row height that gives an in-cell evidence photo a readable size. */
+export const PHOTO_ROW_PT = 110;
 
-const PX_PER_CHAR = 7;
-const COL_PADDING_PX = 5;
-const PT_PER_PX = 0.75;
 const LINE_PT = 12;
 const MIN_ROW_PT = 30;
 const MAX_ROW_PT = 409; // Excel's hard limit
@@ -67,42 +75,15 @@ export function textLines(text: string, charsPerLine: number): number {
   return text.split('\n').reduce((n, para) => n + Math.max(1, Math.ceil(para.length / charsPerLine)), 0);
 }
 
-export function photoLines(photoCount: number): number {
-  return Math.ceil(Math.min(photoCount, PHOTO.maxPerItem) / PHOTO.perLine);
-}
-
-/** Height of a Part 3 row holding `note` and `photoCount` photos, in points. */
+/** Height of a Part 3 row holding `note` and, when `photoCount` > 0, an in-cell photo; in points. */
 export function rowHeightPoints(note: string, photoCount: number): number {
   const forNote = textLines(note, NOTE_CHARS_PER_LINE) * LINE_PT + 6;
-  const forPhotos = photoLines(photoCount) * (PHOTO.heightPx + PHOTO.gapPx) * PT_PER_PX + 6;
-  return Math.min(MAX_ROW_PT, Math.max(MIN_ROW_PT, forNote, forPhotos));
+  const forPhoto = photoCount > 0 ? PHOTO_ROW_PT : 0;
+  return Math.min(MAX_ROW_PT, Math.max(MIN_ROW_PT, forNote, forPhoto));
 }
 
 /** Height of a Part 1 item row: the question (merged C:R) and the note (U) both wrap. */
 export function part1RowHeightPoints(question: string, note: string): number {
   const lines = Math.max(textLines(question, QUESTION_CHARS_PER_LINE), textLines(note, NOTE_CHARS_PER_LINE));
   return Math.min(MAX_ROW_PT, Math.max(MIN_ROW_PT, lines * LINE_PT + 6));
-}
-
-/**
- * Fractional column/row offsets (relative to the evidence cell's 0-based col/row) for the `index`-th photo
- * of a row whose height is `rowHeightPt`.
- */
-export function photoAnchor(index: number, rowHeightPt: number): { colOffset: number; rowOffset: number } {
-  const line = Math.floor(index / PHOTO.perLine);
-  const slot = index % PHOTO.perLine;
-  let px = slot * (PHOTO.widthPx + PHOTO.gapPx);
-  let colOffset = 0;
-  for (const chars of EVIDENCE_COL_WIDTHS_CHARS) {
-    const colPx = chars * PX_PER_CHAR + COL_PADDING_PX;
-    if (px < colPx) {
-      colOffset += px / colPx;
-      px = 0;
-      break;
-    }
-    colOffset += 1;
-    px -= colPx;
-  }
-  const rowOffset = (line * (PHOTO.heightPx + PHOTO.gapPx) * PT_PER_PX) / rowHeightPt;
-  return { colOffset, rowOffset };
 }

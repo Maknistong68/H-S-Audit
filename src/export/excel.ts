@@ -6,6 +6,7 @@ import { repo } from '../db/repo';
 import { excelFilename } from '../domain/filename';
 import { scoreAudit, type AuditScore } from '../domain/scoring';
 import type { Checklist, Result } from '../domain/types';
+import { placeInCellPictures, type InCellPicture } from './inCellPictures';
 import {
   COUNT_CELLS,
   HEADER_CELLS,
@@ -14,12 +15,12 @@ import {
   PART1_SCORE_CELL,
   PART2_ROW,
   PART3,
-  PHOTO,
+  MAX_PHOTOS_PER_CELL,
+  PART3_FORMULAS,
   REPEATED_PREFIX,
   RESULT_COL,
   RESULT_LABEL,
   part1RowHeightPoints,
-  photoAnchor,
   rowHeightPoints,
 } from './mapping';
 
@@ -58,16 +59,7 @@ function noteText(answer: Answer | undefined): string {
   return answer.repeated ? REPEATED_PREFIX + note : note;
 }
 
-function placePhotos(wb: ExcelJS.Workbook, ws: ExcelJS.Worksheet, row: number, photos: Uint8Array[], rowHeightPt: number): void {
-  photos.slice(0, PHOTO.maxPerItem).forEach((bytes, index) => {
-    const imageId = wb.addImage({ buffer: bytes as unknown as ExcelJS.Buffer, extension: 'jpeg' });
-    const { colOffset, rowOffset } = photoAnchor(index, rowHeightPt);
-    ws.addImage(imageId, {
-      tl: { col: PART3.evidenceColIndex0 + colOffset, row: row - 1 + rowOffset },
-      ext: { width: PHOTO.widthPx, height: PHOTO.heightPx },
-    });
-  });
-}
+const formula = (f: string, result: ExcelJS.CellValue): ExcelJS.CellValue => ({ formula: f, result }) as ExcelJS.CellValue;
 
 export async function buildWorkbook(template: ArrayBuffer | Uint8Array, input: ExportInput): Promise<ExcelJS.Workbook> {
   const c = input.checklist ?? checklist;
@@ -92,19 +84,21 @@ export async function buildWorkbook(template: ArrayBuffer | Uint8Array, input: E
 
     const r = item.part3Row;
     const negative = result === 'no' || result === 'partial';
-    ws.getCell(`${PART3.idCol}${r}`).value = item.id;
-    ws.getCell(`${PART3.questionCol}${r}`).value = item.text;
-    ws.getCell(`${PART3.noteCol}${r}`).value = negative && note ? note : null;
-    ws.getCell(`${PART3.evidenceCol}${r}`).value = result === 'full' ? PART3.compliant : result === 'na' ? PART3.na : null;
+    ws.getCell(`${PART3.idCol}${r}`).value = formula(PART3_FORMULAS.id(item.row), item.id);
+    ws.getCell(`${PART3.questionCol}${r}`).value = formula(PART3_FORMULAS.question(item.row), item.text);
+    ws.getCell(`${PART3.noteCol}${r}`).value = formula(PART3_FORMULAS.note(item.row), negative ? note : '');
+    ws.getCell(`${PART3.evidenceCol}${r}`).value = formula(
+      PART3_FORMULAS.evidence(item.row),
+      result === 'full' ? PART3.compliant : result === 'na' ? PART3.na : '',
+    );
     const photos = input.photos.get(ownerKey({ kind: 'item', itemId: item.id })) ?? [];
     const height = rowHeightPoints(negative ? note : '', photos.length);
     ws.getRow(r).height = height;
-    placePhotos(wb, ws, r, photos, height);
   }
 
-  // Counts
-  ws.getCell(COUNT_CELLS.negative).value = input.score.negatives;
-  ws.getCell(COUNT_CELLS.positive).value = input.positives.length;
+  // Counts, live like the rest of Part 3
+  ws.getCell(COUNT_CELLS.negative).value = formula(PART3_FORMULAS.negativeCount, input.score.negatives);
+  ws.getCell(COUNT_CELLS.positive).value = formula(PART3_FORMULAS.positiveCount, input.positives.length);
 
   // Positive observations
   input.positives.forEach((p, i) => {
@@ -114,7 +108,6 @@ export async function buildWorkbook(template: ArrayBuffer | Uint8Array, input: E
     const photos = input.photos.get(ownerKey({ kind: 'positive', positiveId: p.id })) ?? [];
     const height = rowHeightPoints(p.text, photos.length);
     ws.getRow(r).height = height;
-    placePhotos(wb, ws, r, photos, height);
   });
 
   // Cached results for the template's formulas (Excel recalculates on open; previews show these)
@@ -137,6 +130,32 @@ export async function buildWorkbook(template: ArrayBuffer | Uint8Array, input: E
 
   wb.calcProperties.fullCalcOnLoad = true;
   return wb;
+}
+
+/** Turns one or more photos into the single picture a cell can hold. */
+export type ComposePhotos = (jpegs: Uint8Array[]) => Promise<Uint8Array>;
+
+const firstPhoto: ComposePhotos = async (jpegs) => jpegs[0];
+
+/**
+ * The finished .xlsx: live formulas from buildWorkbook, then each question's (and each positive
+ * observation's) photos placed inside its Evidence (Photo) cell as an Excel in-cell picture.
+ */
+export async function buildXlsx(template: ArrayBuffer | Uint8Array, input: ExportInput, opts: { compose?: ComposePhotos } = {}): Promise<Uint8Array> {
+  const c = input.checklist ?? checklist;
+  const compose = opts.compose ?? firstPhoto;
+  const wb = await buildWorkbook(template, input);
+  const bytes = new Uint8Array((await wb.xlsx.writeBuffer()) as ArrayBuffer);
+
+  const pictures: InCellPicture[] = [];
+  const add = async (row: number, list: Uint8Array[] | undefined) => {
+    const photos = (list ?? []).slice(0, MAX_PHOTOS_PER_CELL);
+    if (photos.length === 0) return;
+    pictures.push({ cell: `${PART3.evidenceCol}${row}`, jpeg: await compose(photos) });
+  };
+  for (const item of allItems(c)) await add(item.part3Row, input.photos.get(ownerKey({ kind: 'item', itemId: item.id })));
+  for (const [i, p] of input.positives.entries()) await add(PART3.positiveFirstRow + i, input.photos.get(ownerKey({ kind: 'positive', positiveId: p.id })));
+  return placeInCellPictures(bytes, pictures);
 }
 
 export async function loadTemplate(): Promise<ArrayBuffer> {
@@ -164,8 +183,8 @@ export async function exportExcel(auditId: string): Promise<{ bytes: Uint8Array;
     list.push(new Uint8Array(m.data));
     photos.set(key, list);
   }
-  const wb = await buildWorkbook(template, { audit, answers, positives, photos, score: scoreAudit(results) });
-  const out = await wb.xlsx.writeBuffer();
+  const { composePhotos } = await import('./composePhotos');
+  const bytes = await buildXlsx(template, { audit, answers, positives, photos, score: scoreAudit(results) }, { compose: composePhotos });
   await repo.markExported(auditId);
-  return { bytes: new Uint8Array(out as ArrayBuffer), filename: excelFilename(audit) };
+  return { bytes, filename: excelFilename(audit) };
 }
