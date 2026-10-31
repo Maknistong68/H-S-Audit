@@ -4,6 +4,7 @@ import './styles/base.css';
 import './styles/components.css';
 import './styles/walk.css';
 import './styles/media.css';
+import './styles/findings.css';
 import { installFlushListeners } from './db/flush';
 import { App } from './app';
 

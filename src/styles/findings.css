@@ -1,0 +1,150 @@
+/* ---- findings */
+.findings-section {
+  margin-bottom: var(--space-5);
+}
+
+.section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-3);
+}
+
+.finding-row {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  border-left-width: 4px;
+}
+
+.finding-row.is-no { border-left-color: var(--result-no); }
+.finding-row.is-partial { border-left-color: var(--result-partial); }
+
+.finding-head {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+}
+
+.finding-id {
+  min-height: 40px;
+  padding: 0 var(--space-2);
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.finding-question {
+  line-height: 1.35;
+}
+
+.chip-missing {
+  background: var(--warn-bg);
+  color: var(--warn-ink);
+}
+
+/* ---- score */
+.overall-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+  text-align: center;
+  margin-bottom: var(--space-4);
+}
+
+.overall-pct {
+  font-size: 3rem;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--accent);
+}
+
+.overall-band {
+  font-size: var(--text-lg);
+  font-weight: 700;
+}
+
+.small {
+  font-size: var(--text-sm);
+}
+
+.score-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+}
+
+.score-row.indent {
+  padding-left: var(--space-4);
+}
+
+.score-head {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+}
+
+.score-label {
+  flex: 1;
+  font-weight: 600;
+}
+
+.score-row.indent .score-label {
+  font-weight: 400;
+  font-size: var(--text-sm);
+}
+
+.score-detail {
+  font-size: var(--text-sm);
+}
+
+.score-pct {
+  min-width: 48px;
+  text-align: right;
+  font-weight: 700;
+}
+
+.score-track {
+  height: 8px;
+  border-radius: 4px;
+  background: var(--surface-3);
+  overflow: hidden;
+}
+
+.score-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width var(--dur-base) var(--ease);
+}
+
+.tone-full { color: var(--result-full); }
+.tone-partial { color: var(--result-partial); }
+.tone-no { color: var(--result-no); }
+.tone-na { color: var(--result-na); }
+
+.score-fill.tone-full { background: var(--result-full); }
+.score-fill.tone-partial { background: var(--result-partial); }
+.score-fill.tone-no { background: var(--result-no); }
+.score-fill.tone-na { background: var(--result-na); }
+
+.bands {
+  list-style: none;
+  margin: var(--space-2) 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  font-size: var(--text-sm);
+}
+
+.bands li {
+  display: flex;
+  justify-content: space-between;
+}

@@ -193,6 +193,17 @@ export const repo = {
     });
   },
 
+  async restorePositive(id: string): Promise<void> {
+    const now = Date.now();
+    await db.transaction('rw', db.positives, db.audits, async () => {
+      const p = await db.positives.get(id);
+      if (!p) return;
+      const { deletedAt: _deleted, ...rest } = p;
+      await db.positives.put({ ...rest, updatedAt: now });
+      await touch(p.auditId, now);
+    });
+  },
+
   // ---- media
   async addMedia(input: NewMedia): Promise<Media> {
     const now = Date.now();
