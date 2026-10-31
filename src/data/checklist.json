@@ -1,0 +1,614 @@
+{
+  "templateVersion": "book2-2026-10",
+  "sections": [
+    {
+      "id": "A",
+      "title": "MANAGEMENT",
+      "subsections": [
+        {
+          "id": "A",
+          "title": "MANAGEMENT",
+          "implicit": true,
+          "items": [
+            {
+              "id": "A1",
+              "text": "Is there a strategic plan detailing the program vision, strategic aims, HSSE objectives and targets?",
+              "weight": 3,
+              "row": 9
+            },
+            {
+              "id": "A2",
+              "text": "Is there a HSSE execution plan outlining how Contractor Management deliver their roles & responsibilities?",
+              "weight": 3,
+              "row": 10
+            },
+            {
+              "id": "A3",
+              "text": "How is Contractor mandatory training (HSSE, Supervisor, CM) conducted and compliance tracked?",
+              "weight": 3,
+              "row": 11
+            },
+            {
+              "id": "A4",
+              "text": "Is there specific HSSE audit and inspection schedules? Complied with?",
+              "weight": 3,
+              "row": 12
+            },
+            {
+              "id": "A5",
+              "text": "How is HSSE data and reporting managed, monitored & evaluated (including but not limited to Enablon).",
+              "weight": 3,
+              "row": 13
+            },
+            {
+              "id": "A6",
+              "text": "Enablon process, management and utilization (users, review and validation process etc.?)",
+              "weight": 3,
+              "row": 14
+            },
+            {
+              "id": "A7",
+              "text": "Are incidents investigated - as required by the severity, Incident review panels held and lessons learned shared?",
+              "weight": 3,
+              "row": 15
+            },
+            {
+              "id": "A8",
+              "text": "How is HSSE information communicated (alerts, campaigns, LL) and actions tracked where required?",
+              "weight": 3,
+              "row": 16
+            },
+            {
+              "id": "A9",
+              "text": "Meeting and communication programs with the contractors, schedule,  attendance, comms, tracking actions etc.? (PD/PM HSSE meetings, Safety Forums, Progress and safety meetings)",
+              "weight": 3,
+              "row": 17
+            },
+            {
+              "id": "A10",
+              "text": "How does Contractor ensure that HSSE related non-conformities and corrective action are escalated where required? What is the escalation process and responsibilities?",
+              "weight": 3,
+              "row": 18
+            },
+            {
+              "id": "A11",
+              "text": "Is there a Reward & Recognition award program and a consequence process?",
+              "weight": 3,
+              "row": 19
+            },
+            {
+              "id": "A12",
+              "text": "Show evidence of Monthly HSSE Executive Leadership Meetings, schedule, MoM and action log",
+              "weight": 3,
+              "row": 20
+            },
+            {
+              "id": "A13",
+              "text": "Is there a Contractors / Work Order start up / close out process that ensures HSSE requirements are met. Is there a Subcontractor Consent process managed by Contractor? (Readiness Reviews)",
+              "weight": 3,
+              "row": 21
+            },
+            {
+              "id": "A14",
+              "text": "Is there a program and process in place for the quarterly Contractor Performance review, including HSSE performance?",
+              "weight": 3,
+              "row": 22
+            },
+            {
+              "id": "A15",
+              "text": "How are leadership engagement tours scheduled, measured/recorded and tracked etc.?",
+              "weight": 3,
+              "row": 23
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "B",
+      "title": "PROCESS AND PROCEDURES (ASSESSED ON SITE)",
+      "subsections": [
+        {
+          "id": "B1",
+          "title": "Risk Assessments Method Statements",
+          "implicit": false,
+          "items": [
+            {
+              "id": "B1.1",
+              "text": "Are approved risks assessments and method statements (RAMS) available for all current tasks?",
+              "weight": 3,
+              "row": 28
+            },
+            {
+              "id": "B1.2",
+              "text": "Are pre start briefings being delivered to employees by supervisors (not H&S) before daily activities start?  Records available at point of work and relevant to tasks?",
+              "weight": 3,
+              "row": 29
+            }
+          ]
+        },
+        {
+          "id": "B2",
+          "title": "Competent Person Designation",
+          "implicit": false,
+          "items": [
+            {
+              "id": "B2.1",
+              "text": "Is there adequate supervision and safety cover” (as per the HSAS ratios) at point of work?",
+              "weight": 3,
+              "row": 31
+            },
+            {
+              "id": "B2.2",
+              "text": "Is there a process for designation of competent persons on site?",
+              "weight": 2,
+              "row": 32
+            },
+            {
+              "id": "B2.3",
+              "text": "Are competent persons identified for hazardous activities?",
+              "weight": 1,
+              "row": 33
+            },
+            {
+              "id": "B2.4",
+              "text": "Are the competent persons engaged in the work (at point of work) ?",
+              "weight": 1,
+              "row": 34
+            }
+          ]
+        },
+        {
+          "id": "B3",
+          "title": "Emergency Response",
+          "implicit": false,
+          "items": [
+            {
+              "id": "B3.1",
+              "text": "Does an approved emergency response plan exist?",
+              "weight": 3,
+              "row": 36
+            },
+            {
+              "id": "B3.2",
+              "text": "Are employees aware of the plan, and the NEOC emergency numbers (or equivalent) displayed?",
+              "weight": 3,
+              "row": 37
+            },
+            {
+              "id": "B3.3",
+              "text": "Is there an approved scenario schedule for drills and are they performed?  Are scenarios relative to hazards and risks?",
+              "weight": 3,
+              "row": 38
+            }
+          ]
+        },
+        {
+          "id": "B4",
+          "title": "Work Permits",
+          "implicit": false,
+          "items": [
+            {
+              "id": "B4.1",
+              "text": "Is there a permit to work system?  A permit office/process for coordination, issue and closure?",
+              "weight": 3,
+              "row": 40
+            },
+            {
+              "id": "B4.2",
+              "text": "Does the permit system require positive verification of the safe condition on completion of works?",
+              "weight": 1,
+              "row": 41
+            }
+          ]
+        },
+        {
+          "id": "B5",
+          "title": "Utility Clearance",
+          "implicit": false,
+          "items": [
+            {
+              "id": "B5.1",
+              "text": "Is there a system for identification of underground utilities?",
+              "weight": 3,
+              "row": 43
+            },
+            {
+              "id": "B5.2",
+              "text": "Is the utility clearance system integrated with the work permit system?",
+              "weight": 1,
+              "row": 44
+            },
+            {
+              "id": "B5.3",
+              "text": "Does the utility clearance system apply to all ground and structure penetration activities?",
+              "weight": 1,
+              "row": 45
+            }
+          ]
+        },
+        {
+          "id": "B6",
+          "title": "Subcontractor Management",
+          "implicit": false,
+          "items": [
+            {
+              "id": "B6.1",
+              "text": "Does the contractor have a subcontractor screening and evaluation process, is this monitored?",
+              "weight": 3,
+              "row": 47
+            },
+            {
+              "id": "B6.2",
+              "text": "Was an assessment carried out for HSSE Compliance for each subcontractor engaged on the project prior to commencing work on site?",
+              "weight": 2,
+              "row": 48
+            },
+            {
+              "id": "B6.3",
+              "text": "Was documented criteria used to evaluate the subcontractors past HSE performance and existing or proposed systems?",
+              "weight": 2,
+              "row": 49
+            },
+            {
+              "id": "B6.4",
+              "text": "Have supervision arrangements for each subcontractor been confirmed and documented?",
+              "weight": 1,
+              "row": 50
+            },
+            {
+              "id": "B6.5",
+              "text": "How is each subcontractors HSSE performance tracked and reported throughout the project lifecycle?",
+              "weight": 1,
+              "row": 51
+            },
+            {
+              "id": "B6.6",
+              "text": "Have actions been taken to improve subcontractor HSSE performance that does not meet expectations and have those actions been effective?",
+              "weight": 1,
+              "row": 52
+            },
+            {
+              "id": "B6.7",
+              "text": "Are the electrician and electrical supervisors assessed for the competency and Are the inspections carried out by the electrical supervisor or Engineer on the electrical installations?",
+              "weight": 2,
+              "row": 53
+            },
+            {
+              "id": "B6.8",
+              "text": "Is there an up-to-date register of electrical equipment?",
+              "weight": 2,
+              "row": 54
+            },
+            {
+              "id": "B6.9",
+              "text": "Does the contractor hold regular safety meetings with subcontractors?",
+              "weight": 1,
+              "row": 55
+            }
+          ]
+        },
+        {
+          "id": "B7",
+          "title": "Training",
+          "implicit": false,
+          "items": [
+            {
+              "id": "B7.1",
+              "text": "HSE Training requirements have been identified, implemented and recorded.",
+              "weight": 2,
+              "row": 57
+            },
+            {
+              "id": "B7.2",
+              "text": "Has a NEOM approved HSE Induction has been delivered to all employees and visitors?  Term before re-fresher required identified and how managed?",
+              "weight": 1,
+              "row": 58
+            }
+          ]
+        },
+        {
+          "id": "B8",
+          "title": "Incident Reporting",
+          "implicit": false,
+          "items": [
+            {
+              "id": "B8.1",
+              "text": "Are employees aware of a process for reporting incidents and observations?  Posters/Charts displayed?",
+              "weight": 3,
+              "row": 60
+            }
+          ]
+        },
+        {
+          "id": "B9",
+          "title": "Fire Prevention",
+          "implicit": false,
+          "items": [
+            {
+              "id": "B9.1",
+              "text": "Are fire extinguishers and fire fighting equipment properly located inspected and maintained?",
+              "weight": 1,
+              "row": 62
+            },
+            {
+              "id": "B9.2",
+              "text": "Are Oxy-fuel rigs properly set up and stored and flashback arrestors are properly installed?",
+              "weight": 1,
+              "row": 63
+            },
+            {
+              "id": "B9.3",
+              "text": "Are flammables, oxidizers, and combustibles stored properly?",
+              "weight": 1,
+              "row": 64
+            }
+          ]
+        },
+        {
+          "id": "B10",
+          "title": "Personal Protective Equipment",
+          "implicit": false,
+          "items": [
+            {
+              "id": "B10.1",
+              "text": "Is there a PPE policy (including NEOM 5 point PPE) is it implemented and managed?",
+              "weight": 3,
+              "row": 66
+            },
+            {
+              "id": "B10.2",
+              "text": "Is task specific PPE provided where required (i.e. SCBA for confined space work etc.)",
+              "weight": 1,
+              "row": 67
+            }
+          ]
+        },
+        {
+          "id": "B11",
+          "title": "Medical",
+          "implicit": false,
+          "items": [
+            {
+              "id": "B11.1",
+              "text": "Is there a suitable medical facilities and ambulance available?",
+              "weight": 3,
+              "row": 69
+            },
+            {
+              "id": "B11.2",
+              "text": "Are there enough qualified medical staff (doctor, nurse, paramedics) on site?",
+              "weight": 2,
+              "row": 70
+            },
+            {
+              "id": "B11.3",
+              "text": "Are there enough first aid trained employees on site, how are the identified?",
+              "weight": 2,
+              "row": 71
+            }
+          ]
+        },
+        {
+          "id": "B12",
+          "title": "Occupational and Health Surveillance",
+          "implicit": false,
+          "items": [
+            {
+              "id": "B12.1",
+              "text": "Is there an occupational and health program/plan implemented and recorded?",
+              "weight": 3,
+              "row": 73
+            },
+            {
+              "id": "B12.2",
+              "text": "Is there a health surveillance program?",
+              "weight": 1,
+              "row": 74
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "C",
+      "title": "PLANNING AND COMMITMENT",
+      "subsections": [
+        {
+          "id": "C1",
+          "title": "Leadership Engagement",
+          "implicit": false,
+          "items": [
+            {
+              "id": "C1.1",
+              "text": "Do you have an established Health & Safety Steering Committee, and is senior management represented on it?",
+              "weight": 1,
+              "row": 79
+            },
+            {
+              "id": "C1.2",
+              "text": "What actions were made by the Sr management during the walkthrough",
+              "weight": 1,
+              "row": 80
+            },
+            {
+              "id": "C1.3",
+              "text": "Are there minutes available for the most recent HSE SC, Has the following been reviewed and discussed, Injuries, illnesses, HIPO Nearmisses, HIPO Unsafe behaviours and conditions?",
+              "weight": 1,
+              "row": 81
+            },
+            {
+              "id": "C1.4",
+              "text": "Do you have a schedule for the Audit and Is there an evidence of recent audit report and is it reviewed by the Sr management (E.G Steering committee)?",
+              "weight": 1,
+              "row": 82
+            },
+            {
+              "id": "C1.5",
+              "text": "Do you have a schedule for Senior Management (PD & CEO), and does it include their participation in Health & Safety walkthroughs",
+              "weight": 1,
+              "row": 83
+            },
+            {
+              "id": "C1.6",
+              "text": "What NC's / Opportunity For Improvements and recomendations for Corrective Action's were made by the auditor?",
+              "weight": 1,
+              "row": 84
+            },
+            {
+              "id": "C1.7",
+              "text": "Do  you have a schedule for the Mass TBT and Does the schedule includes participation by the Sr management (External PD & CEO)",
+              "weight": 1,
+              "row": 85
+            },
+            {
+              "id": "C1.8",
+              "text": "Is there evidence of recognition and rewarding for frontline workforce reporting of high potential nearmisses and observations relating to critical controls (signficant Hazards)?",
+              "weight": 1,
+              "row": 86
+            },
+            {
+              "id": "C1.9",
+              "text": "Do managers and supervisors ensure that Risk Assessments and Method Statements (RAMS) are approved, communicated, and implemented for all work activities?",
+              "weight": 1,
+              "row": 87
+            },
+            {
+              "id": "C1.10",
+              "text": "Are RAMS available for all activities (check the RAMS register)? Take sample of activities on site, a copy of the RAMS must be available on site.",
+              "weight": 1,
+              "row": 88
+            },
+            {
+              "id": "C1.11",
+              "text": "Do the requirements specified in the RAMS accurately reflect the work activity being conducted? (Specific activity covered, all relevant significant hazards identified, all mandated controls in place)",
+              "weight": 2,
+              "row": 89
+            },
+            {
+              "id": "C1.12",
+              "text": "Is there a documented review process for RAMS and does it include authorization by the relevant Construction Manager / Employer?",
+              "weight": 1,
+              "row": 90
+            }
+          ]
+        },
+        {
+          "id": "C2",
+          "title": "Planning",
+          "implicit": false,
+          "items": [
+            {
+              "id": "C2.2",
+              "text": "Is there upto date and Code A Employer (Oxagon Projects) approved HSSE plan ?",
+              "weight": 2,
+              "row": 92
+            },
+            {
+              "id": "C2.3",
+              "text": "Is there upto date and Employer (Oxagon Projects) approved HSSE Monitoring Schedule?",
+              "weight": 1,
+              "row": 93
+            },
+            {
+              "id": "C2.4",
+              "text": "Is there upto date and Employer (Oxagon Projects) approved Training Matrix, Records and Plan and Is there upto date and Employer (Oxagon Projects) approved Induction Presentation?",
+              "weight": 1,
+              "row": 94
+            },
+            {
+              "id": "C2.5",
+              "text": "Is there upto date and Employer (Oxagon Projects) approved HSSE Personnel CV's?",
+              "weight": 1,
+              "row": 95
+            },
+            {
+              "id": "C2.6",
+              "text": "Is there Employer approved HSSE Reward and Recognition Scheme?",
+              "weight": 1,
+              "row": 96
+            },
+            {
+              "id": "C2.7",
+              "text": "Is there upto date and Employer (Oxagon Projects) approved Emergency Management and Emergency Response Plan?",
+              "weight": 1,
+              "row": 97
+            },
+            {
+              "id": "C2.8",
+              "text": "Is there upto date and Employer (Oxagon Projects) approved Injury / Illness Management Plan?",
+              "weight": 2,
+              "row": 98
+            },
+            {
+              "id": "C2.9",
+              "text": "Is there upto date and Employer (Oxagon Projects) approved Subcontractor Management Plan?",
+              "weight": 1,
+              "row": 99
+            },
+            {
+              "id": "C2.10",
+              "text": "Is there upto date and Employer (Oxagon Projects) approved Traffic Management and Logistics Plan?",
+              "weight": 1,
+              "row": 100
+            },
+            {
+              "id": "C2.11",
+              "text": "Is there upto date and Employer (Oxagon Projects) approved Lifting Operations Management Plan and Lift Plan?",
+              "weight": 1,
+              "row": 101
+            },
+            {
+              "id": "C2.12",
+              "text": "Is there upto date and Employer (Oxagon Projects) approved Fatigue Management Plan?",
+              "weight": 2,
+              "row": 102
+            },
+            {
+              "id": "C2.13",
+              "text": "Is there upto date and Employer (Oxagon Projects) approved Fire Prevention Plan?",
+              "weight": 1,
+              "row": 103
+            },
+            {
+              "id": "C2.14",
+              "text": "Is there upto date and Employer (Oxagon Projects) approved Temporary Electrical Management Safety Plan?",
+              "weight": 1,
+              "row": 104
+            },
+            {
+              "id": "C2.15",
+              "text": "Is there upto date and Employer (Oxagon Projects) approved Testing Commissioning Plans?",
+              "weight": 1,
+              "row": 105
+            },
+            {
+              "id": "C2.16",
+              "text": "Is there upto date and Employer (Oxagon Projects) approved Temporary Works Procedure / Register / Management Plan?",
+              "weight": 1,
+              "row": 106
+            },
+            {
+              "id": "C2.17",
+              "text": "Is there upto date and Employer (Oxagon Projects) approved Weather working Plan?",
+              "weight": 3,
+              "row": 107
+            },
+            {
+              "id": "C2.18",
+              "text": "Is there upto date and Employer (Oxagon Projects) approved Equipment Inspection Program",
+              "weight": 3,
+              "row": 108
+            },
+            {
+              "id": "C2.19",
+              "text": "Is there upto date and Employer (Oxagon Projects) approved Mobilization & Demobilization Plan",
+              "weight": 1,
+              "row": 109
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
