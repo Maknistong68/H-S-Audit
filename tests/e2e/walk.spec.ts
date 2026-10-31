@@ -79,6 +79,7 @@ test('next unanswered, and ready text drops into the note', async ({ page }) => 
   await page.getByRole('button', { name: 'No', exact: true }).click();
   await page.getByRole('button', { name: 'Ready text' }).click();
   const options = page.getByRole('dialog', { name: 'Ready text for A2' }).locator('.ready-option');
+  await expect(options.first()).toBeVisible(); // the sheet renders in a portal on the next frame
   expect(await options.count()).toBeGreaterThanOrEqual(5);
   const first = (await options.first().innerText()).trim();
   await options.first().click();
