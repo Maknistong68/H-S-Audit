@@ -1,0 +1,117 @@
+import { useEffect, useState } from 'preact/hooks';
+import type { Tag } from '../../db/db';
+import { repo } from '../../db/repo';
+import { checkForUpdates } from '../../pwa/updates';
+import { TagManager } from '../components/TagManager';
+import { toast } from '../components/toast';
+import { TopBar } from '../components/TopBar';
+import { useLiveQuery } from '../hooks/useLiveQuery';
+import { paths } from '../paths';
+
+const LANGS = [
+  { value: 'en-US', label: 'English' },
+  { value: 'ar-SA', label: 'Arabic (العربية)' },
+];
+
+interface StorageInfo {
+  persisted: boolean | null;
+  usageMb: number | null;
+  quotaMb: number | null;
+}
+
+async function readStorage(): Promise<StorageInfo> {
+  const s = navigator.storage;
+  if (!s) return { persisted: null, usageMb: null, quotaMb: null };
+  const persisted = s.persisted ? await s.persisted() : null;
+  const est = s.estimate ? await s.estimate() : undefined;
+  const mb = (n?: number) => (n === undefined ? null : Math.round((n / 1_048_576) * 10) / 10);
+  return { persisted, usageMb: mb(est?.usage), quotaMb: mb(est?.quota) };
+}
+
+function installed(): boolean {
+  return window.matchMedia('(display-mode: standalone)').matches || (navigator as { standalone?: boolean }).standalone === true;
+}
+
+export function Settings() {
+  const lang = useLiveQuery(() => repo.getSetting('dictationLang', 'en-US'), []);
+  const tags = useLiveQuery<Tag[]>(() => repo.listTags(), []);
+  const [storage, setStorage] = useState<StorageInfo | null>(null);
+
+  useEffect(() => {
+    void readStorage().then(setStorage);
+  }, []);
+
+  async function requestPersist() {
+    const ok = navigator.storage?.persist ? await navigator.storage.persist() : false;
+    toast(ok ? 'Storage is now persistent' : 'The browser did not grant persistent storage — installing the app to the home screen helps');
+    setStorage(await readStorage());
+  }
+
+  const isIos = /iPad|iPhone|iPod/.test(navigator.userAgent);
+
+  return (
+    <>
+      <TopBar title="Settings" back={paths.home()} />
+      <main class="screen">
+        <section class="findings-section">
+          <h2>Dictation</h2>
+          <div class="field">
+            <label for="dictation-lang">Dictation language</label>
+            <select id="dictation-lang" value={lang ?? 'en-US'} onChange={(e) => void repo.setSetting('dictationLang', (e.currentTarget as HTMLSelectElement).value)}>
+              {LANGS.map((l) => (
+                <option key={l.value} value={l.value}>
+                  {l.label}
+                </option>
+              ))}
+            </select>
+          </div>
+          <p class="muted small">Dictation uses the phone's speech service and usually needs mobile signal. Voice memos work without it.</p>
+        </section>
+
+        <TagManager tags={tags ?? []} />
+
+        <section class="findings-section">
+          <h2>Storage</h2>
+          {storage && (
+            <p>
+              Persistent storage: <strong>{storage.persisted === null ? 'unknown' : storage.persisted ? 'on' : 'off'}</strong>
+              {storage.usageMb !== null && (
+                <span class="muted">
+                  {' '}
+                  · {storage.usageMb} MB used{storage.quotaMb !== null ? ` of ${storage.quotaMb} MB` : ''}
+                </span>
+              )}
+            </p>
+          )}
+          {storage?.persisted === false && (
+            <button type="button" class="btn btn-sm" onClick={requestPersist}>
+              Request persistent storage
+            </button>
+          )}
+          <p class="muted small">Audits live only on this device. Export a backup before changing phones or clearing browser data.</p>
+        </section>
+
+        <section class="findings-section">
+          <h2>App</h2>
+          <p>
+            Version <strong>{import.meta.env.VITE_APP_VERSION ?? 'dev'}</strong>
+          </p>
+          {!installed() && (
+            <p class="muted small">
+              {isIos
+                ? 'Install to the home screen: tap Share, then “Add to Home Screen”. This keeps your audits safe from Safari’s storage clean-up.'
+                : 'Install to the home screen: open the browser menu and choose “Install app” or “Add to Home screen”.'}
+            </p>
+          )}
+          <button
+            type="button"
+            class="btn btn-sm"
+            onClick={() => void checkForUpdates().then((ok) => toast(ok ? 'Checked — you will be asked to reload if a new version is ready' : 'Updates are checked automatically when installed'))}
+          >
+            Check for updates
+          </button>
+        </section>
+      </main>
+    </>
+  );
+}

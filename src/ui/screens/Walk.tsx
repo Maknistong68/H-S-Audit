@@ -1,11 +1,11 @@
 import { useLocation } from 'preact-iso';
-import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
-import { allItems } from '../../data/checklist';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'preact/hooks';
+import { allItems, itemById } from '../../data/checklist';
 import type { Media, Tag } from '../../db/db';
 import { ownerKey } from '../../db/ids';
 import { repo } from '../../db/repo';
 import { snapshotIfDirty, startSnapshotTimer } from '../../db/snapshots';
-import type { Result } from '../../domain/types';
+import type { ChecklistItem, Result } from '../../domain/types';
 import { appendDictated } from '../../media/dictation';
 import { Banner } from '../components/Banner';
 import { BottomNav } from '../components/BottomNav';
@@ -19,7 +19,9 @@ import { ProgressLine } from '../components/ProgressLine';
 import { TagEditor } from '../components/TagEditor';
 import { TopBar } from '../components/TopBar';
 import { useAudit } from '../hooks/useAudit';
+import { useKeyboardShortcuts, type WalkShortcuts } from '../hooks/useKeyboardShortcuts';
 import { useLiveQuery } from '../hooks/useLiveQuery';
+import { DESK_QUERY, useMediaQuery } from '../hooks/useMediaQuery';
 import { paths } from '../paths';
 import { adjacentItem, DEFAULT_WALK_STATE, nextUnanswered, tagCounts, visibleRows, type WalkState } from '../walk/walkState';
 
@@ -30,12 +32,13 @@ function scrollToItem(id: string) {
   requestAnimationFrame(() => {
     const el = document.getElementById(`item-${id}`);
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    el?.scrollIntoView({ block: 'start', behavior: reduced ? 'auto' : 'smooth' });
+    el?.scrollIntoView({ block: 'nearest', behavior: reduced ? 'auto' : 'smooth' });
   });
 }
 
 export function Walk({ id }: { id: string }) {
   const { route } = useLocation();
+  const desk = useMediaQuery(DESK_QUERY);
   const view = useAudit(id);
   const tagsByItem = useLiveQuery(() => repo.listItemTags(), []);
   const tags = useLiveQuery<Tag[]>(() => repo.listTags(), []);
@@ -47,15 +50,6 @@ export function Walk({ id }: { id: string }) {
   const [interim, setInterim] = useState('');
   const noteHandle = useRef<NoteFieldHandle | null>(null);
   const searchBox = useRef<HTMLInputElement>(null);
-
-  const mediaByOwner = useMemo(() => {
-    const map = new Map<string, Media[]>();
-    for (const m of media ?? []) {
-      const key = ownerKey(m.owner);
-      map.set(key, [...(map.get(key) ?? []), m]);
-    }
-    return map;
-  }, [media]);
 
   useEffect(() => {
     let cancelled = false;
@@ -75,38 +69,68 @@ export function Walk({ id }: { id: string }) {
     };
   }, [id]);
 
-  const update = (patch: Partial<WalkState>) => {
-    setState((s) => {
-      const next = { ...(s ?? DEFAULT_WALK_STATE), ...patch };
-      void repo.setSetting(`walk:${id}`, next);
-      return next;
-    });
-  };
+  const update = useCallback(
+    (patch: Partial<WalkState>) => {
+      setState((s) => {
+        const next = { ...(s ?? DEFAULT_WALK_STATE), ...patch };
+        void repo.setSetting(`walk:${id}`, next);
+        return next;
+      });
+    },
+    [id],
+  );
+
+  const mediaByOwner = useMemo(() => {
+    const map = new Map<string, Media[]>();
+    for (const m of media ?? []) {
+      const key = ownerKey(m.owner);
+      map.set(key, [...(map.get(key) ?? []), m]);
+    }
+    return map;
+  }, [media]);
 
   const answers = view?.answers ?? new Map();
-  const rows = useMemo(
-    () => (state && tagsByItem ? visibleRows(state, answers, tagsByItem) : []),
-    [state, answers, tagsByItem],
-  );
+  const rows = useMemo(() => (state && tagsByItem ? visibleRows(state, answers, tagsByItem) : []), [state, answers, tagsByItem]);
   const counts = useMemo(() => (tagsByItem ? tagCounts(tagsByItem, answers) : new Map()), [tagsByItem, answers]);
 
   const answered = [...answers.values()].filter((a) => a.result !== undefined).length;
   const flagged = [...answers.values()].filter((a) => a.flagged).length;
 
-  const expand = (itemId: string | null) => {
-    update({ expandedId: itemId });
-    if (itemId) scrollToItem(itemId);
-  };
+  const expandedId = state?.expandedId ?? null;
+  const expandedVisible = expandedId !== null && rows.some((r) => r.kind === 'item' && r.id === expandedId);
+  const expandedItem = expandedVisible ? itemById(expandedId!) : undefined;
+
+  const expand = useCallback(
+    (itemId: string | null) => {
+      update({ expandedId: itemId });
+      if (itemId) scrollToItem(itemId);
+    },
+    [update],
+  );
+
+  const shortcuts = useMemo<WalkShortcuts>(
+    () => ({
+      onResult: (r) => {
+        if (expandedItem) void repo.setResult(id, expandedItem.id, r);
+      },
+      onNext: () => expand(adjacentItem(expandedId, rows, 1) ?? expandedId),
+      onPrev: () => expand(adjacentItem(expandedId, rows, -1) ?? expandedId),
+      onFlag: () => {
+        if (expandedItem) void repo.setFlag(id, expandedItem.id, !answers.get(expandedItem.id)?.flagged);
+      },
+    }),
+    [id, expandedItem, expandedId, rows, answers, expand],
+  );
+  useKeyboardShortcuts(shortcuts, state !== null);
 
   const setMode = (mode: WalkState['mode']) => {
     update({ mode });
-    if (state?.expandedId) scrollToItem(state.expandedId);
+    if (expandedId) scrollToItem(expandedId);
     if (mode === 'search') requestAnimationFrame(() => searchBox.current?.focus());
   };
 
   const audit = view?.audit;
-  const needsBackup =
-    audit !== undefined && answered > 0 && audit.updatedAt - (audit.lastExportAt ?? audit.createdAt) > EXPORT_NUDGE_MS;
+  const needsBackup = audit !== undefined && answered > 0 && audit.updatedAt - (audit.lastExportAt ?? audit.createdAt) > EXPORT_NUDGE_MS;
 
   if (view && !audit) {
     return (
@@ -122,9 +146,79 @@ export function Walk({ id }: { id: string }) {
   }
 
   const tagList = tags ?? [];
-  const expandedId = state?.expandedId ?? null;
-  // An item hidden by the current filter cannot stay expanded
-  const expandedVisible = expandedId !== null && rows.some((r) => r.kind === 'item' && r.id === expandedId);
+
+  const renderCard = (item: ChecklistItem, expanded: boolean, domId?: string) => {
+    const owner = { kind: 'item', itemId: item.id } as const;
+    const itemMedia = mediaByOwner.get(ownerKey(owner)) ?? [];
+    return (
+      <ItemCard
+        key={domId ?? item.id}
+        domId={domId}
+        item={item}
+        answer={answers.get(item.id)}
+        tagIds={tagsByItem?.get(item.id) ?? []}
+        tags={tagList}
+        expanded={expanded}
+        mediaCounts={{ photos: itemMedia.filter((m) => m.type === 'photo').length, audio: itemMedia.filter((m) => m.type === 'audio').length }}
+        media={
+          expanded ? (
+            <ItemMediaTools
+              auditId={id}
+              owner={owner}
+              lang={lang}
+              onInterim={setInterim}
+              onDictated={(text) => {
+                if (noteHandle.current) noteHandle.current.append(text);
+                else void repo.setNote(id, item.id, appendDictated(answers.get(item.id)?.note ?? '', text));
+              }}
+            />
+          ) : undefined
+        }
+        mediaStrip={expanded ? <MediaStrip media={itemMedia} /> : undefined}
+        interim={expanded ? interim : undefined}
+        noteRef={
+          expanded
+            ? (h) => {
+                noteHandle.current = h;
+              }
+            : undefined
+        }
+        onToggle={() => expand(expandedId === item.id ? null : item.id)}
+        onResult={(r: Result | undefined) => void repo.setResult(id, item.id, r)}
+        onNote={(note) => repo.setNote(id, item.id, note)}
+        onFlag={(f) => void repo.setFlag(id, item.id, f)}
+        onRepeated={(r) => void repo.setRepeated(id, item.id, r)}
+        onEditTags={() => setTagEditor(item.id)}
+        onPrev={() => expand(adjacentItem(item.id, rows, -1) ?? item.id)}
+        onNext={() => expand(adjacentItem(item.id, rows, 1) ?? item.id)}
+        onNextUnanswered={() => expand(nextUnanswered(item.id, rows, answers) ?? item.id)}
+      />
+    );
+  };
+
+  const list = (
+    <div class="walk-list">
+      {rows.map((row) => {
+        if (row.kind === 'section') {
+          return (
+            <h2 key={`s-${row.id}`} class="walk-section">
+              {row.id} · {row.title}
+            </h2>
+          );
+        }
+        if (row.kind === 'subsection') {
+          return (
+            <h3 key={`ss-${row.id}`} class="walk-subsection">
+              {row.id} · {row.title}
+            </h3>
+          );
+        }
+        const item = row.item!;
+        // On the desk layout the list stays compact; the expanded card lives in the detail pane.
+        return renderCard(item, !desk && expandedVisible && expandedId === item.id);
+      })}
+    </div>
+  );
 
   return (
     <>
@@ -147,14 +241,11 @@ export function Walk({ id }: { id: string }) {
             {tagList.map((t) => {
               const c = counts.get(t.id) ?? { total: 0, done: 0 };
               return (
-                <button
-                  key={t.id}
-                  type="button"
-                  class="tag-chip"
-                  aria-pressed={state.tag === t.id}
-                  onClick={() => update({ tag: state.tag === t.id ? null : t.id })}
-                >
-                  {t.label} <span class="tag-count">{c.done}/{c.total}</span>
+                <button key={t.id} type="button" class="tag-chip" aria-pressed={state.tag === t.id} onClick={() => update({ tag: state.tag === t.id ? null : t.id })}>
+                  {t.label}{' '}
+                  <span class="tag-count">
+                    {c.done}/{c.total}
+                  </span>
                 </button>
               );
             })}
@@ -183,7 +274,7 @@ export function Walk({ id }: { id: string }) {
         )}
       </div>
 
-      <main class="screen has-nav walk-screen">
+      <main class={`screen has-nav walk-screen${desk ? ' walk-desk' : ''}`}>
         {needsBackup && (
           <Banner tone="warn" action={{ label: 'Export backup', onClick: () => route(paths.export(id)) }}>
             Edits not backed up for over 2 hours.
@@ -197,65 +288,22 @@ export function Walk({ id }: { id: string }) {
             {state.mode === 'search' && !state.query.trim() && <p class="empty">Type an id, a word from a question, or something from your notes.</p>}
             {state.mode === 'sequence' && rows.length === 0 && <p class="empty">Every question is answered. Uncheck “Remaining only” to review.</p>}
 
-            <div class="walk-list">
-              {rows.map((row) => {
-                if (row.kind === 'section') {
-                  return (
-                    <h2 key={`s-${row.id}`} class="walk-section">
-                      {row.id} · {row.title}
-                    </h2>
-                  );
-                }
-                if (row.kind === 'subsection') {
-                  return (
-                    <h3 key={`ss-${row.id}`} class="walk-subsection">
-                      {row.id} · {row.title}
-                    </h3>
-                  );
-                }
-                const item = row.item!;
-                const owner = { kind: 'item', itemId: item.id } as const;
-                const itemMedia = mediaByOwner.get(ownerKey(owner)) ?? [];
-                const isExpanded = expandedVisible && expandedId === item.id;
-                return (
-                  <ItemCard
-                    key={item.id}
-                    item={item}
-                    answer={answers.get(item.id)}
-                    tagIds={tagsByItem.get(item.id) ?? []}
-                    tags={tagList}
-                    expanded={isExpanded}
-                    mediaCounts={{ photos: itemMedia.filter((m) => m.type === 'photo').length, audio: itemMedia.filter((m) => m.type === 'audio').length }}
-                    media={
-                      isExpanded ? (
-                        <ItemMediaTools
-                          auditId={id}
-                          owner={owner}
-                          lang={lang}
-                          onInterim={setInterim}
-                          onDictated={(text) => {
-                            if (noteHandle.current) noteHandle.current.append(text);
-                            else void repo.setNote(id, item.id, appendDictated(answers.get(item.id)?.note ?? '', text));
-                          }}
-                        />
-                      ) : undefined
-                    }
-                    mediaStrip={isExpanded ? <MediaStrip media={itemMedia} /> : undefined}
-                    interim={isExpanded ? interim : undefined}
-                    noteRef={isExpanded ? (h) => { noteHandle.current = h; } : undefined}
-                    onToggle={() => expand(expandedId === item.id ? null : item.id)}
-                    onResult={(r: Result | undefined) => void repo.setResult(id, item.id, r)}
-                    onNote={(note) => repo.setNote(id, item.id, note)}
-                    onFlag={(f) => void repo.setFlag(id, item.id, f)}
-                    onRepeated={(r) => void repo.setRepeated(id, item.id, r)}
-                    onEditTags={() => setTagEditor(item.id)}
-                    onPrev={() => expand(adjacentItem(item.id, rows, -1) ?? item.id)}
-                    onNext={() => expand(adjacentItem(item.id, rows, 1) ?? item.id)}
-                    onNextUnanswered={() => expand(nextUnanswered(item.id, rows, answers) ?? item.id)}
-                  />
-                );
-              })}
-            </div>
+            {desk ? (
+              <div class="walk-panes">
+                {list}
+                <div class="walk-detail" data-testid="walk-detail">
+                  {expandedItem ? (
+                    renderCard(expandedItem, true, `detail-${expandedItem.id}`)
+                  ) : (
+                    <p class="empty">
+                      Select a question on the left. Keys: <kbd>1</kbd>–<kbd>4</kbd> result, <kbd>j</kbd>/<kbd>k</kbd> next/previous, <kbd>f</kbd> flag.
+                    </p>
+                  )}
+                </div>
+              </div>
+            ) : (
+              list
+            )}
           </>
         )}
       </main>
@@ -271,9 +319,7 @@ export function Walk({ id }: { id: string }) {
         }}
       />
 
-      {tagEditor && tagsByItem && (
-        <TagEditor open={true} itemId={tagEditor} selected={tagsByItem.get(tagEditor) ?? []} tags={tagList} onClose={() => setTagEditor(null)} />
-      )}
+      {tagEditor && tagsByItem && <TagEditor open={true} itemId={tagEditor} selected={tagsByItem.get(tagEditor) ?? []} tags={tagList} onClose={() => setTagEditor(null)} />}
 
       <BottomNav auditId={id} />
     </>

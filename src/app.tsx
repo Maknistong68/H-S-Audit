@@ -1,5 +1,4 @@
 import { LocationProvider, Router, Route } from 'preact-iso';
-import { BottomNav } from './ui/components/BottomNav';
 import { Toast } from './ui/components/Toast';
 import { TopBar } from './ui/components/TopBar';
 import { paths, routes } from './ui/paths';
@@ -8,30 +7,8 @@ import { Export } from './ui/screens/Export';
 import { Findings } from './ui/screens/Findings';
 import { Home } from './ui/screens/Home';
 import { Score } from './ui/screens/Score';
+import { Settings } from './ui/screens/Settings';
 import { Walk } from './ui/screens/Walk';
-
-function Placeholder({ id, title }: { id: string; title: string }) {
-  return (
-    <>
-      <TopBar title={title} back={paths.home()} />
-      <main class="screen has-nav">
-        <p class="empty">{title} is coming in a later step.</p>
-      </main>
-      <BottomNav auditId={id} />
-    </>
-  );
-}
-
-function SettingsPlaceholder() {
-  return (
-    <>
-      <TopBar title="Settings" back={paths.home()} />
-      <main class="screen">
-        <p class="empty">Settings are coming in a later step.</p>
-      </main>
-    </>
-  );
-}
 
 function NotFound() {
   return (
@@ -56,7 +33,7 @@ export function App() {
         <Route path={routes.findings} component={Findings} />
         <Route path={routes.score} component={Score} />
         <Route path={routes.export} component={Export} />
-        <Route path={routes.settings} component={SettingsPlaceholder} />
+        <Route path={routes.settings} component={Settings} />
         <Route default component={NotFound} />
       </Router>
       <Toast />

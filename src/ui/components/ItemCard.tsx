@@ -29,6 +29,8 @@ export interface ItemCardProps {
   /** Interim dictation text shown under the note. */
   interim?: string;
   noteRef?: (h: NoteFieldHandle | null) => void;
+  /** DOM id; the desk layout renders the same item twice (list and detail). */
+  domId?: string;
 }
 
 const resultLabel = (r?: Result) => RESULT_OPTIONS.find((o) => o.value === r)?.label;
@@ -69,7 +71,7 @@ export function ItemCard(props: ItemCardProps) {
     .join(', ');
 
   return (
-    <article id={`item-${item.id}`} class={`item-card${expanded ? ' expanded' : ''}${result ? ` is-${result}` : ''}`}>
+    <article id={props.domId ?? `item-${item.id}`} class={`item-card${expanded ? ' expanded' : ''}${result ? ` is-${result}` : ''}`}>
       <button
         type="button"
         class="item-head"

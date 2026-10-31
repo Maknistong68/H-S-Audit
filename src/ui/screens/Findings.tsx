@@ -26,7 +26,7 @@ function FindingRow({ auditId, item, answer, media, lang }: { auditId: string; i
   const photos = media.filter((m) => m.type === 'photo').length;
   const label = RESULT_OPTIONS.find((o) => o.value === answer.result)?.label ?? '';
   return (
-    <li class={`card finding-row is-${answer.result}`}>
+    <li id={`finding-${item.id}`} class={`card finding-row is-${answer.result}`}>
       <div class="finding-head">
         <button type="button" class="finding-id" onClick={() => void openItemInWalk(auditId, item.id, route)} aria-label={`Open ${item.id} in Walk`}>
           {item.id}
@@ -96,7 +96,20 @@ export function Findings({ id }: { id: string }) {
   return (
     <>
       <TopBar title="Findings" back={paths.home()} subtitle={view?.audit?.header.auditNo || 'Untitled audit'} />
-      <main class="screen has-nav">
+      <main class="screen has-nav findings-desk">
+        <nav class="findings-index" aria-label="Findings index">
+          <ul>
+            {negatives.map(({ item }) => (
+              <li key={item.id}>
+                <button type="button" onClick={() => document.getElementById(`finding-${item.id}`)?.scrollIntoView({ block: 'start' })}>
+                  <span class="idx-id">{item.id}</span>
+                  <span class="idx-text">{item.text}</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </nav>
+        <div>
         <section class="findings-section">
           <div class="section-head">
             <h2>Negative observations: {negatives.length}</h2>
@@ -113,6 +126,7 @@ export function Findings({ id }: { id: string }) {
         </section>
 
         <PositiveList auditId={id} positives={positives ?? []} mediaByOwner={mediaByOwner} lang={lang} />
+        </div>
       </main>
       <BottomNav auditId={id} />
     </>
