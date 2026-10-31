@@ -22,8 +22,10 @@ export interface ItemCardProps {
   onNext(): void;
   onPrev(): void;
   onNextUnanswered(): void;
-  /** Photo / memo / dictate controls and the media strip (Task 11). */
+  /** Photo / memo / dictate controls, rendered in the toolbar. */
   media?: ComponentChildren;
+  /** Thumbnails and memos, rendered under the toolbar. */
+  mediaStrip?: ComponentChildren;
   /** Interim dictation text shown under the note. */
   interim?: string;
   noteRef?: (h: NoteFieldHandle | null) => void;
@@ -124,6 +126,8 @@ export function ItemCard(props: ItemCardProps) {
               Tags
             </button>
           </div>
+
+          {props.mediaStrip}
 
           <TagChips tagIds={props.tagIds} tags={props.tags} />
 

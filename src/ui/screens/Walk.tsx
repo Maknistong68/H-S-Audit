@@ -1,15 +1,20 @@
 import { useLocation } from 'preact-iso';
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import { allItems } from '../../data/checklist';
-import type { Tag } from '../../db/db';
+import type { Media, Tag } from '../../db/db';
+import { ownerKey } from '../../db/ids';
 import { repo } from '../../db/repo';
 import { snapshotIfDirty, startSnapshotTimer } from '../../db/snapshots';
 import type { Result } from '../../domain/types';
+import { appendDictated } from '../../media/dictation';
 import { Banner } from '../components/Banner';
 import { BottomNav } from '../components/BottomNav';
 import { ItemCard } from '../components/ItemCard';
+import { ItemMediaTools } from '../components/ItemMedia';
 import { JumpSheet } from '../components/JumpSheet';
+import { MediaStrip } from '../components/MediaStrip';
 import { ModeSwitch } from '../components/ModeSwitch';
+import type { NoteFieldHandle } from '../components/NoteField';
 import { ProgressLine } from '../components/ProgressLine';
 import { TagEditor } from '../components/TagEditor';
 import { TopBar } from '../components/TopBar';
@@ -34,10 +39,23 @@ export function Walk({ id }: { id: string }) {
   const view = useAudit(id);
   const tagsByItem = useLiveQuery(() => repo.listItemTags(), []);
   const tags = useLiveQuery<Tag[]>(() => repo.listTags(), []);
+  const media = useLiveQuery<Media[]>(() => repo.listMedia(id), [id]);
+  const lang = useLiveQuery(() => repo.getSetting('dictationLang', 'en-US'), []) ?? 'en-US';
   const [state, setState] = useState<WalkState | null>(null);
   const [jumpOpen, setJumpOpen] = useState(false);
   const [tagEditor, setTagEditor] = useState<string | null>(null);
+  const [interim, setInterim] = useState('');
+  const noteHandle = useRef<NoteFieldHandle | null>(null);
   const searchBox = useRef<HTMLInputElement>(null);
+
+  const mediaByOwner = useMemo(() => {
+    const map = new Map<string, Media[]>();
+    for (const m of media ?? []) {
+      const key = ownerKey(m.owner);
+      map.set(key, [...(map.get(key) ?? []), m]);
+    }
+    return map;
+  }, [media]);
 
   useEffect(() => {
     let cancelled = false;
@@ -196,6 +214,9 @@ export function Walk({ id }: { id: string }) {
                   );
                 }
                 const item = row.item!;
+                const owner = { kind: 'item', itemId: item.id } as const;
+                const itemMedia = mediaByOwner.get(ownerKey(owner)) ?? [];
+                const isExpanded = expandedVisible && expandedId === item.id;
                 return (
                   <ItemCard
                     key={item.id}
@@ -203,7 +224,25 @@ export function Walk({ id }: { id: string }) {
                     answer={answers.get(item.id)}
                     tagIds={tagsByItem.get(item.id) ?? []}
                     tags={tagList}
-                    expanded={expandedVisible && expandedId === item.id}
+                    expanded={isExpanded}
+                    mediaCounts={{ photos: itemMedia.filter((m) => m.type === 'photo').length, audio: itemMedia.filter((m) => m.type === 'audio').length }}
+                    media={
+                      isExpanded ? (
+                        <ItemMediaTools
+                          auditId={id}
+                          owner={owner}
+                          lang={lang}
+                          onInterim={setInterim}
+                          onDictated={(text) => {
+                            if (noteHandle.current) noteHandle.current.append(text);
+                            else void repo.setNote(id, item.id, appendDictated(answers.get(item.id)?.note ?? '', text));
+                          }}
+                        />
+                      ) : undefined
+                    }
+                    mediaStrip={isExpanded ? <MediaStrip media={itemMedia} /> : undefined}
+                    interim={isExpanded ? interim : undefined}
+                    noteRef={isExpanded ? (h) => { noteHandle.current = h; } : undefined}
                     onToggle={() => expand(expandedId === item.id ? null : item.id)}
                     onResult={(r: Result | undefined) => void repo.setResult(id, item.id, r)}
                     onNote={(note) => repo.setNote(id, item.id, note)}
