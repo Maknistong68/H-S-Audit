@@ -32,6 +32,41 @@ test('answer in sequence, see it in area and search, persist offline', async ({ 
   await context.setOffline(false);
 });
 
+test('a note typed before the first answer survives a tap that creates the answer row', async ({ page }) => {
+  await newAudit(page);
+  await page.getByRole('button', { name: /^A2 / }).click();
+  await page.getByRole('button', { name: 'Add note' }).click();
+  const note = page.getByLabel('Observation note');
+  // Type and tap Flag inside one page call so both land well inside the 300 ms note debounce:
+  // Flag creates the answer row while the note write is still pending.
+  await page.evaluate(() => {
+    const ta = document.querySelector<HTMLTextAreaElement>('textarea')!;
+    Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value')!.set!.call(ta, 'abc');
+    ta.dispatchEvent(new Event('input', { bubbles: true }));
+    Array.from(document.querySelectorAll('button')).find((b) => b.textContent?.trim() === 'Flag')!.click();
+  });
+  await note.pressSequentially('d');
+  await page.waitForTimeout(800);
+  await page.reload();
+  const head = page.getByRole('button', { name: /^A2 / });
+  if ((await head.getAttribute('aria-expanded')) !== 'true') await head.click();
+  await expect(page.getByLabel('Observation note')).toHaveValue('abcd');
+});
+
+test('field controls meet the 48 px tap target', async ({ page }) => {
+  await newAudit(page);
+  await page.getByRole('button', { name: /^A1 / }).click();
+  const targets = [
+    page.getByRole('button', { name: 'Flag' }),
+    page.getByRole('button', { name: 'Next unanswered' }),
+    page.getByRole('tab', { name: 'Area' }),
+    page.locator('label', { hasText: 'Remaining only' }),
+  ];
+  for (const t of targets) expect((await t.boundingBox())!.height, await t.innerText()).toBeGreaterThanOrEqual(48);
+  await page.getByRole('tab', { name: 'Area' }).click();
+  expect((await page.getByRole('button', { name: /Fire/ }).boundingBox())!.height).toBeGreaterThanOrEqual(48);
+});
+
 test('next unanswered and tag editing', async ({ page }) => {
   await newAudit(page);
   await page.getByRole('button', { name: /^A1 / }).click();

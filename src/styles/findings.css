@@ -30,7 +30,7 @@
 }
 
 .finding-id {
-  min-height: 40px;
+  min-height: var(--tap-min);
   padding: 0 var(--space-2);
   border: 0;
   border-radius: var(--radius-sm);

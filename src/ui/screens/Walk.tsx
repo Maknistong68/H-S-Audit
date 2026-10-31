@@ -1,12 +1,12 @@
 import { useLocation } from 'preact-iso';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import { allItems, itemById } from '../../data/checklist';
-import type { Media, Tag } from '../../db/db';
+import type { MediaRow, Tag } from '../../db/db';
+import { flushPendingWrites } from '../../db/flush';
 import { ownerKey } from '../../db/ids';
 import { repo } from '../../db/repo';
 import { snapshotIfDirty, startSnapshotTimer } from '../../db/snapshots';
 import type { ChecklistItem, Result } from '../../domain/types';
-import { appendDictated } from '../../media/dictation';
 import { Banner } from '../components/Banner';
 import { BottomNav } from '../components/BottomNav';
 import { ItemCard } from '../components/ItemCard';
@@ -42,7 +42,7 @@ export function Walk({ id }: { id: string }) {
   const view = useAudit(id);
   const tagsByItem = useLiveQuery(() => repo.listItemTags(), []);
   const tags = useLiveQuery<Tag[]>(() => repo.listTags(), []);
-  const media = useLiveQuery<Media[]>(() => repo.listMedia(id), [id]);
+  const media = useLiveQuery<MediaRow[]>(() => repo.listMediaMeta(id), [id]);
   const lang = useLiveQuery(() => repo.getSetting('dictationLang', 'en-US'), []) ?? 'en-US';
   const [state, setState] = useState<WalkState | null>(null);
   const [jumpOpen, setJumpOpen] = useState(false);
@@ -81,7 +81,7 @@ export function Walk({ id }: { id: string }) {
   );
 
   const mediaByOwner = useMemo(() => {
-    const map = new Map<string, Media[]>();
+    const map = new Map<string, MediaRow[]>();
     for (const m of media ?? []) {
       const key = ownerKey(m.owner);
       map.set(key, [...(map.get(key) ?? []), m]);
@@ -154,6 +154,7 @@ export function Walk({ id }: { id: string }) {
       <ItemCard
         key={domId ?? item.id}
         domId={domId}
+        auditId={id}
         item={item}
         answer={answers.get(item.id)}
         tagIds={tagsByItem?.get(item.id) ?? []}
@@ -170,7 +171,8 @@ export function Walk({ id }: { id: string }) {
               onInterim={setInterim}
               onDictated={(text) => {
                 if (noteHandle.current) noteHandle.current.append(text);
-                else void repo.setNote(id, item.id, appendDictated(answers.get(item.id)?.note ?? '', text));
+                // Field gone (note closed or card collapsed): let any pending text land first, then append to the stored note
+                else void flushPendingWrites().then(() => repo.appendNote(id, item.id, text));
               }}
             />
           ) : undefined

@@ -1,4 +1,5 @@
 import { LocationProvider, Router, Route } from 'preact-iso';
+import { ErrorBoundary } from './ui/components/ErrorBoundary';
 import { Toast } from './ui/components/Toast';
 import { TopBar } from './ui/components/TopBar';
 import { paths, routes } from './ui/paths';
@@ -26,16 +27,18 @@ function NotFound() {
 export function App() {
   return (
     <LocationProvider>
-      <Router>
-        <Route path={routes.home} component={Home} />
-        <Route path={routes.header} component={AuditHeader} />
-        <Route path={routes.walk} component={Walk} />
-        <Route path={routes.findings} component={Findings} />
-        <Route path={routes.score} component={Score} />
-        <Route path={routes.export} component={Export} />
-        <Route path={routes.settings} component={Settings} />
-        <Route default component={NotFound} />
-      </Router>
+      <ErrorBoundary>
+        <Router>
+          <Route path={routes.home} component={Home} />
+          <Route path={routes.header} component={AuditHeader} />
+          <Route path={routes.walk} component={Walk} />
+          <Route path={routes.findings} component={Findings} />
+          <Route path={routes.score} component={Score} />
+          <Route path={routes.export} component={Export} />
+          <Route path={routes.settings} component={Settings} />
+          <Route default component={NotFound} />
+        </Router>
+      </ErrorBoundary>
       <Toast />
     </LocationProvider>
   );

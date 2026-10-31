@@ -6,6 +6,9 @@ export function DictateButton(props: { lang: string; onText(text: string): void;
   const [online, setOnline] = useState(navigator.onLine);
   const [on, setOn] = useState(false);
   const dictation = useRef<Dictation | null>(null);
+  // Recognition results arrive long after start(); always hand them to the latest callbacks.
+  const latest = useRef(props);
+  latest.current = props;
 
   useEffect(() => {
     const up = () => setOnline(true);
@@ -25,8 +28,8 @@ export function DictateButton(props: { lang: string; onText(text: string): void;
   function start() {
     dictation.current = createDictation(
       {
-        onFinal: props.onText,
-        onInterim: props.onInterim,
+        onFinal: (text) => latest.current.onText(text),
+        onInterim: (text) => latest.current.onInterim(text),
         onError: (code) => {
           if (code === 'network') toast('No signal for dictation — record a memo instead', { durationMs: 6000 });
           else if (code === 'not-allowed' || code === 'service-not-allowed') toast("Microphone blocked — allow it in the browser's site settings", { durationMs: 6000 });
@@ -34,7 +37,7 @@ export function DictateButton(props: { lang: string; onText(text: string): void;
         },
         onEnd: () => {
           setOn(false);
-          props.onInterim('');
+          latest.current.onInterim('');
           dictation.current = null;
         },
       },

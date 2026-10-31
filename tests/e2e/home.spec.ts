@@ -18,3 +18,23 @@ test('create audit, fill header, survives reload, archive and purge gate', async
   await page.getByLabel('Type the audit number to confirm').fill('WRONG');
   await expect(page.getByRole('button', { name: 'Purge permanently' })).toBeDisabled();
 });
+
+test('a damaged audit row does not lock the auditor out', async ({ page }) => {
+  await page.goto('./');
+  await page.getByRole('button', { name: 'New audit' }).click();
+  await page.goto('./');
+  await page.evaluate(async () => {
+    const req = indexedDB.open('hs-audit');
+    const db = await new Promise<IDBDatabase>((res, rej) => { req.onsuccess = () => res(req.result); req.onerror = () => rej(req.error); });
+    await new Promise<void>((res, rej) => {
+      const tx = db.transaction('audits', 'readwrite');
+      tx.objectStore('audits').put({ id: 'bad-row', templateVersion: 'x', status: 'draft', createdAt: 1, updatedAt: 1 });
+      tx.oncomplete = () => res();
+      tx.onerror = () => rej(tx.error);
+    });
+    db.close();
+  });
+  await page.reload();
+  await expect(page.getByText('Untitled audit').first()).toBeVisible();
+  await expect(page.getByRole('button', { name: 'New audit' })).toBeVisible();
+});

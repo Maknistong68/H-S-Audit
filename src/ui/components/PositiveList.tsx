@@ -1,14 +1,14 @@
 import { useRef, useState } from 'preact/hooks';
-import type { Media, Positive } from '../../db/db';
+import type { MediaRow, Positive } from '../../db/db';
+import { flushPendingWrites } from '../../db/flush';
 import { ownerKey } from '../../db/ids';
 import { repo } from '../../db/repo';
-import { appendDictated } from '../../media/dictation';
 import { ItemMediaTools } from './ItemMedia';
 import { MediaStrip } from './MediaStrip';
 import { NoteField, type NoteFieldHandle } from './NoteField';
 import { toast } from './toast';
 
-function PositiveRow({ auditId, auditNo, positive, media, lang }: { auditId: string; auditNo: string; positive: Positive; media: Media[]; lang: string }) {
+function PositiveRow({ auditId, auditNo, positive, media, lang }: { auditId: string; auditNo: string; positive: Positive; media: MediaRow[]; lang: string }) {
   const [interim, setInterim] = useState('');
   const handle = useRef<NoteFieldHandle | null>(null);
   const owner = { kind: 'positive', positiveId: positive.id } as const;
@@ -32,7 +32,7 @@ function PositiveRow({ auditId, auditNo, positive, media, lang }: { auditId: str
           owner={owner}
           lang={lang}
           onInterim={setInterim}
-          onDictated={(text) => (handle.current ? handle.current.append(text) : void repo.updatePositive(positive.id, appendDictated(positive.text, text)))}
+          onDictated={(text) => (handle.current ? handle.current.append(text) : void flushPendingWrites().then(() => repo.appendPositiveText(positive.id, text)))}
         />
         <button
           type="button"
@@ -54,7 +54,7 @@ function PositiveRow({ auditId, auditNo, positive, media, lang }: { auditId: str
   );
 }
 
-export function PositiveList({ auditId, auditNo, positives, mediaByOwner, lang }: { auditId: string; auditNo: string; positives: Positive[]; mediaByOwner: Map<string, Media[]>; lang: string }) {
+export function PositiveList({ auditId, auditNo, positives, mediaByOwner, lang }: { auditId: string; auditNo: string; positives: Positive[]; mediaByOwner: Map<string, MediaRow[]>; lang: string }) {
   return (
     <section class="findings-section">
       <div class="section-head">

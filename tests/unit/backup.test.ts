@@ -1,5 +1,5 @@
 import { test, expect, beforeEach } from 'vitest';
-import { unzipSync, strFromU8 } from 'fflate';
+import { unzipSync, strFromU8, zipSync, strToU8 } from 'fflate';
 import { db } from '../../src/db/db';
 import { repo } from '../../src/db/repo';
 import { buildBackup, importBackup, audioExt } from '../../src/db/backup';
@@ -70,6 +70,28 @@ test('import twice gives two independent audits', async () => {
     expect((await repo.getAudit(id))!.importedAt).toBeGreaterThan(0);
   }
   expect(r1.warnings).toEqual([]);
+});
+
+test('rejects a manifest without a usable audit and creates nothing', async () => {
+  const noHeader = zipSync(
+    { 'audit.json': strToU8(JSON.stringify({ formatVersion: 1, templateVersion: 'book2-2026-10', audit: { id: 'x' }, answers: [], positives: [], media: [] })) },
+    { level: 0 },
+  );
+  await expect(importBackup(noHeader)).rejects.toThrow(/not a valid HSE Audit backup/);
+  const notAnObject = zipSync({ 'audit.json': strToU8('[]') }, { level: 0 });
+  await expect(importBackup(notAnObject)).rejects.toThrow(/not a valid HSE Audit backup/);
+  expect(await db.audits.count()).toBe(0);
+});
+
+test('an archived audit imports as a draft with a complete header', async () => {
+  const a = await seed();
+  await repo.archiveAudit(a.id);
+  const { bytes } = await buildBackup(a.id);
+  const r = await importBackup(bytes);
+  const imported = await repo.getAudit(r.auditId);
+  expect(imported!.status).toBe('draft');
+  expect(imported!.header.contractorWo).toBe('WO-1');
+  expect(Object.keys(imported!.header).sort()).toEqual(['auditDate', 'auditNo', 'auditors', 'contactNumber', 'contractorWo', 'projectName']);
 });
 
 test('audio extensions', () => {

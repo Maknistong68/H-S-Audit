@@ -152,14 +152,13 @@ export async function exportExcel(auditId: string): Promise<{ bytes: Uint8Array;
   const [answerRows, positives, media, template] = await Promise.all([
     repo.getAnswers(auditId),
     repo.listPositives(auditId),
-    repo.listMedia(auditId),
+    repo.listMedia(auditId, { type: 'photo' }), // memos never go into the Excel; do not load them
     loadTemplate(),
   ]);
   const answers = new Map(answerRows.map((a) => [a.itemId, a]));
   const results = new Map<string, Result | undefined>(answerRows.map((a) => [a.itemId, a.result]));
   const photos = new Map<string, Uint8Array[]>();
   for (const m of media) {
-    if (m.type !== 'photo') continue;
     const key = ownerKey(m.owner);
     const list = photos.get(key) ?? [];
     list.push(new Uint8Array(m.data));

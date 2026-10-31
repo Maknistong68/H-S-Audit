@@ -68,6 +68,47 @@ test('memo recorder collects chunks, ticks, and auto-stops at the cap', async ()
   vi.useRealTimers();
 });
 
+test('memo recorder stops and saves when the page is hidden', async () => {
+  vi.useRealTimers();
+  class FakeRecorder {
+    static isTypeSupported() { return true; }
+    ondataavailable: ((e: { data: Blob }) => void) | null = null;
+    onstop: (() => void) | null = null;
+    state = 'inactive';
+    constructor(public stream: unknown, public opts: unknown) {}
+    start() { this.state = 'recording'; }
+    stop() {
+      this.state = 'inactive';
+      this.ondataavailable?.({ data: new Blob([new Uint8Array([9])]) });
+      this.onstop?.();
+    }
+  }
+  let hidden: (() => void) | null = null;
+  const stream = { getTracks: () => [{ stop: () => {} }] } as unknown as MediaStream;
+  const done = vi.fn();
+  const rec = createMemoRecorder(
+    { onTick: () => {}, onDone: done, onError: vi.fn() },
+    {
+      getStream: async () => stream,
+      Recorder: FakeRecorder as unknown as typeof MediaRecorder,
+      now: () => 0,
+      onPageHidden: (fn) => {
+        hidden = fn;
+        return () => {
+          hidden = null;
+        };
+      },
+    },
+  );
+  await rec.start();
+  expect(hidden).not.toBeNull();
+  hidden!();
+  await new Promise((r) => setTimeout(r, 20));
+  expect(rec.recording()).toBe(false);
+  expect(done).toHaveBeenCalledOnce();
+  expect(hidden).toBeNull(); // listener released with the microphone
+});
+
 test('dictation availability and text joining', () => {
   expect(dictationAvailable({ webkitSpeechRecognition: class {} }, true)).toBe(true);
   expect(dictationAvailable({ webkitSpeechRecognition: class {} }, false)).toBe(false);

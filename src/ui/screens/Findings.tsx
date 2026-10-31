@@ -1,11 +1,11 @@
 import { useLocation } from 'preact-iso';
 import { useMemo, useRef, useState } from 'preact/hooks';
 import { allItems } from '../../data/checklist';
-import type { Answer, Media, Positive } from '../../db/db';
+import type { Answer, MediaRow, Positive } from '../../db/db';
+import { flushPendingWrites } from '../../db/flush';
 import { ownerKey } from '../../db/ids';
 import { repo } from '../../db/repo';
 import type { ChecklistItem } from '../../domain/types';
-import { appendDictated } from '../../media/dictation';
 import { BottomNav } from '../components/BottomNav';
 import { ItemMediaTools } from '../components/ItemMedia';
 import { MediaStrip } from '../components/MediaStrip';
@@ -18,7 +18,7 @@ import { useLiveQuery } from '../hooks/useLiveQuery';
 import { paths } from '../paths';
 import { openItemInWalk } from '../walk/openItem';
 
-function FindingRow({ auditId, auditNo, item, answer, media, lang }: { auditId: string; auditNo: string; item: ChecklistItem; answer: Answer; media: Media[]; lang: string }) {
+function FindingRow({ auditId, auditNo, item, answer, media, lang }: { auditId: string; auditNo: string; item: ChecklistItem; answer: Answer; media: MediaRow[]; lang: string }) {
   const { route } = useLocation();
   const [interim, setInterim] = useState('');
   const handle = useRef<NoteFieldHandle | null>(null);
@@ -53,7 +53,7 @@ function FindingRow({ auditId, auditNo, item, answer, media, lang }: { auditId: 
           owner={owner}
           lang={lang}
           onInterim={setInterim}
-          onDictated={(text) => (handle.current ? handle.current.append(text) : void repo.setNote(auditId, item.id, appendDictated(answer.note, text)))}
+          onDictated={(text) => (handle.current ? handle.current.append(text) : void flushPendingWrites().then(() => repo.appendNote(auditId, item.id, text)))}
         />
       </div>
       <MediaStrip media={media} auditNo={auditNo} />
@@ -64,11 +64,11 @@ function FindingRow({ auditId, auditNo, item, answer, media, lang }: { auditId: 
 export function Findings({ id }: { id: string }) {
   const view = useAudit(id);
   const positives = useLiveQuery<Positive[]>(() => repo.listPositives(id), [id]);
-  const media = useLiveQuery<Media[]>(() => repo.listMedia(id), [id]);
+  const media = useLiveQuery<MediaRow[]>(() => repo.listMediaMeta(id), [id]);
   const lang = useLiveQuery(() => repo.getSetting('dictationLang', 'en-US'), []) ?? 'en-US';
 
   const mediaByOwner = useMemo(() => {
-    const map = new Map<string, Media[]>();
+    const map = new Map<string, MediaRow[]>();
     for (const m of media ?? []) {
       const key = ownerKey(m.owner);
       map.set(key, [...(map.get(key) ?? []), m]);

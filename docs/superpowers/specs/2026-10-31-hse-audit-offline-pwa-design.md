@@ -256,6 +256,13 @@ Tables: `audits`, `answers` (index `auditId`), `positives` (index `auditId`),
 `media` (indexes `auditId`, `[auditId+type]`), `snapshots` (index
 `auditId`), `tagOverrides`, `tags`, `settings`.
 
+Schema v2 (added after review): the `data` bytes of each `Media` row live in
+a separate `mediaBlobs` table (`{ id, data }`), so lists, snapshots and
+live queries read metadata (with the small thumbnail) only and never load
+photos or memos into memory; the v1 → v2 upgrade moves existing bytes
+across. Photos are also copied to the phone's Downloads when added (Settings
+toggle), and each photo has a Share action.
+
 All reads and writes go through one module (`src/db/repo.ts`); screens never
 touch Dexie directly. The repository exposes an observable per audit so
 every screen re-renders from the database, never from screen-local copies.

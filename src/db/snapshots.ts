@@ -1,4 +1,4 @@
-import { db, type Answer, type Audit, type Media, type Positive, type Snapshot, type SnapshotReason } from './db';
+import { db, type Answer, type Audit, type MediaRow, type Positive, type Snapshot, type SnapshotReason } from './db';
 import { newId } from './ids';
 
 export const SNAPSHOT_LIMIT = 40;
@@ -6,7 +6,7 @@ export const SNAPSHOT_INTERVAL_MS = 15 * 60 * 1000;
 
 export type { SnapshotReason };
 
-export type MediaMeta = Omit<Media, 'data' | 'thumb'>;
+export type MediaMeta = Omit<MediaRow, 'thumb'>;
 
 export interface SnapshotPayload {
   formatVersion: 1;
@@ -16,12 +16,12 @@ export interface SnapshotPayload {
   media: MediaMeta[];
 }
 
-function stripMedia(m: Media): MediaMeta {
-  const { data: _data, thumb: _thumb, ...meta } = m;
+function stripMedia(m: MediaRow): MediaMeta {
+  const { thumb: _thumb, ...meta } = m;
   return meta;
 }
 
-/** Everything about an audit except media bytes. */
+/** Everything about an audit except media bytes (which live in their own table and are never read here). */
 export async function buildSnapshotPayload(auditId: string): Promise<SnapshotPayload> {
   const audit = await db.audits.get(auditId);
   if (!audit) throw new Error('audit not found');
@@ -76,9 +76,8 @@ export async function restoreSnapshot(snapshotId: string): Promise<void> {
     await db.positives.bulkPut(payload.positives);
     for (const meta of payload.media) {
       const row = await db.media.get(meta.id);
-      if (!row) continue; // bytes are gone (purged); nothing to relink
-      const { deletedAt: _deleted, ...rest } = row;
-      await db.media.put(meta.deletedAt === undefined ? rest : { ...rest, deletedAt: meta.deletedAt });
+      if (!row) continue; // purged; nothing to relink
+      await db.media.update(meta.id, { deletedAt: meta.deletedAt });
     }
   });
 }

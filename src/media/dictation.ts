@@ -1,3 +1,5 @@
+import { joinText } from '../domain/text';
+
 /** Minimal typing of the Web Speech API (not in lib.dom). */
 interface RecognitionAlternative {
   transcript: string;
@@ -32,12 +34,7 @@ export function dictationAvailable(win: unknown, online: boolean): boolean {
 }
 
 /** Appends dictated text to a note with a single separating space (none after a trailing newline). */
-export function appendDictated(note: string, text: string): string {
-  const t = text.trim();
-  if (!t) return note;
-  if (!note) return t;
-  return /\s$/.test(note) ? note + t : `${note} ${t}`;
-}
+export const appendDictated = joinText;
 
 export interface DictationCallbacks {
   onFinal(text: string): void;

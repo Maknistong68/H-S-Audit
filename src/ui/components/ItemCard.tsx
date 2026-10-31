@@ -7,6 +7,7 @@ import { ResultControl, RESULT_OPTIONS } from './ResultControl';
 import { TagChips } from './TagChips';
 
 export interface ItemCardProps {
+  auditId: string;
   item: ChecklistItem;
   answer?: Answer;
   tagIds: string[];
@@ -101,7 +102,7 @@ export function ItemCard(props: ItemCardProps) {
 
           {noteOpen ? (
             <NoteField
-              id={`${answer?.auditId ?? 'audit'}:${item.id}`}
+              id={`${props.auditId}:${item.id}`}
               value={note}
               onSave={props.onNote}
               interim={props.interim}

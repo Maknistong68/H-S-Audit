@@ -22,7 +22,7 @@
 }
 
 .thumb-share {
-  min-height: 32px;
+  min-height: 36px;
   padding: 0 var(--space-2);
   border: 0;
   background: transparent;
@@ -51,10 +51,10 @@
 
 .thumb-remove {
   position: absolute;
-  top: -8px;
-  right: -8px;
-  width: 32px;
-  height: 32px;
+  top: -10px;
+  right: -10px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   border: 1px solid var(--border);
   background: var(--surface);
@@ -62,6 +62,18 @@
   font-size: 1.1rem;
   line-height: 1;
   box-shadow: var(--shadow);
+}
+
+/* visual size stays small over the thumbnail; the tap area is the full 48 px */
+.thumb-remove::after,
+.thumb-share::after {
+  content: '';
+  position: absolute;
+  inset: -6px;
+}
+
+.thumb-share {
+  position: relative;
 }
 
 .photo-full {
