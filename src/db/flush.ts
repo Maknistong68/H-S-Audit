@@ -36,6 +36,10 @@ export function hasPendingWrites(): boolean {
   return pending.size > 0;
 }
 
+export function hasPendingWrite(key: string): boolean {
+  return pending.has(key);
+}
+
 export function installFlushListeners(win: Window): void {
   const flush = () => {
     void flushPendingWrites();

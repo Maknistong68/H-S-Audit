@@ -83,25 +83,24 @@ export async function restoreSnapshot(snapshotId: string): Promise<void> {
   });
 }
 
-/**
- * Snapshots the audit every `intervalMs` while it has changed since the last snapshot (or since the timer
- * started). Returns a stop function.
- */
+/** Takes a snapshot only if the audit changed since the newest one (or since it was created). */
+export async function snapshotIfDirty(auditId: string, reason: SnapshotReason): Promise<Snapshot | null> {
+  const audit = await db.audits.get(auditId);
+  if (!audit) return null;
+  const [newest] = await listSnapshots(auditId);
+  const since = newest ? newest.createdAt : audit.createdAt;
+  if (audit.updatedAt <= since) return null;
+  return takeSnapshot(auditId, reason);
+}
+
+/** Snapshots the audit every `intervalMs` while it keeps changing. Returns a stop function. */
 export function startSnapshotTimer(auditId: string, intervalMs: number = SNAPSHOT_INTERVAL_MS): () => void {
-  let lastSeen = Date.now();
   let running = false;
   const tick = async () => {
     if (running) return;
     running = true;
     try {
-      const audit = await db.audits.get(auditId);
-      if (!audit) return;
-      const [newest] = await listSnapshots(auditId);
-      const since = newest ? Math.max(newest.createdAt, lastSeen) : lastSeen;
-      if (audit.updatedAt > since) {
-        const snap = await takeSnapshot(auditId, 'timer');
-        lastSeen = snap.createdAt;
-      }
+      await snapshotIfDirty(auditId, 'timer');
     } catch (err) {
       console.error('snapshot timer failed', err);
     } finally {

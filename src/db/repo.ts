@@ -244,9 +244,16 @@ export const repo = {
     await db.tagOverrides.put({ itemId, tags });
   },
 
+  /** Tags for every checklist item: the override where one exists, else the defaults. */
+  async listItemTags(): Promise<Map<string, string[]>> {
+    const overrides = new Map((await db.tagOverrides.toArray()).map((o) => [o.itemId, o.tags]));
+    return new Map(allItems().map((i) => [i.id, overrides.get(i.id) ?? defaultTagsFor(i.id)]));
+  },
+
+  /** Read-only (safe inside liveQuery): built-in tags come from code until the table is first written. */
   async listTags(): Promise<Tag[]> {
-    await ensureTagsSeeded();
-    const all = await db.tags.toArray();
+    const stored = await db.tags.toArray();
+    const all: Tag[] = stored.length === 0 ? builtInTags.map((t) => ({ id: t.id, label: t.label, builtIn: true })) : stored;
     const order = new Map(builtInTags.map((t, i) => [t.id, i]));
     const builtIn = all.filter((t) => t.builtIn).sort((a, b) => (order.get(a.id) ?? 0) - (order.get(b.id) ?? 0));
     const custom = all.filter((t) => !t.builtIn).sort((a, b) => a.label.localeCompare(b.label));
@@ -264,6 +271,7 @@ export const repo = {
   },
 
   async renameTag(id: string, label: string): Promise<void> {
+    await ensureTagsSeeded();
     await db.tags.update(id, { label: label.trim() });
   },
 
