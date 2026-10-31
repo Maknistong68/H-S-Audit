@@ -5,8 +5,11 @@ import { readFileSync } from 'node:fs';
 
 const pkg = JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 'utf8')) as { version: string };
 
+// GitHub Pages serves the app under /h-s-audit/; Vercel (which sets VERCEL=1 at build time) at the root.
+const base = process.env.BASE_PATH ?? (process.env.VERCEL ? '/' : '/h-s-audit/');
+
 export default defineConfig({
-  base: '/h-s-audit/',
+  base,
   define: {
     'import.meta.env.VITE_APP_VERSION': JSON.stringify(pkg.version),
   },
@@ -22,7 +25,7 @@ export default defineConfig({
         clientsClaim: true, // the first service worker controls the page immediately, so an offline reload works
         globPatterns: ['**/*.{js,css,html,svg,png,xlsx,webmanifest}'],
         maximumFileSizeToCacheInBytes: 6 * 1024 * 1024,
-        navigateFallback: '/h-s-audit/index.html',
+        navigateFallback: `${base}index.html`,
       },
       manifest: {
         name: 'HSE Audit',

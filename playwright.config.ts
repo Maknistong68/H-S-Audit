@@ -6,11 +6,13 @@ if (!process.env.PLAYWRIGHT_BROWSERS_PATH && existsSync('/opt/pw-browsers')) {
   process.env.PLAYWRIGHT_BROWSERS_PATH = '/opt/pw-browsers';
 }
 
+const base = process.env.BASE_PATH ?? '/h-s-audit/';
+
 export default defineConfig({
   testDir: 'tests/e2e',
   timeout: 60_000,
   use: {
-    baseURL: 'http://localhost:4173/h-s-audit/',
+    baseURL: `http://localhost:4173${base}`,
     launchOptions: {
       args: ['--use-fake-device-for-media-stream', '--use-fake-ui-for-media-stream'],
     },
@@ -18,7 +20,7 @@ export default defineConfig({
   projects: [{ name: 'mobile', use: { ...devices['Pixel 7'] } }],
   webServer: {
     command: 'npm run build && npm run preview',
-    url: 'http://localhost:4173/h-s-audit/',
+    url: `http://localhost:4173${base}`,
     reuseExistingServer: !process.env.CI,
     timeout: 180_000,
   },
