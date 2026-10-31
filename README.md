@@ -6,7 +6,9 @@ by area (documentation, site walk, clinic, electrical, …) or by search; record
 results, notes, photos and voice memos; never lose a draft; and export the
 same Excel workbook the reporting chain already uses.
 
-Live app: https://maknistong68.github.io/h-s-audit/
+Live app: **https://hse-audit-nine.vercel.app** (Vercel, auto-deploys on
+every push to the repository's production branch).
+Alternative hosting on GitHub Pages is described under *Deploying*.
 
 ## Install on the phone
 
@@ -40,9 +42,15 @@ restored with Undo, and **Export → Snapshots** keeps restore points (every
 
 ## Deploying
 
-The app is static and deploys to GitHub Pages with two GitHub Actions
-workflows, `ci.yml` (typecheck, unit tests, end-to-end tests, build on every
-push) and `deploy.yml` (publish `dist/` to Pages on every push to `main`).
+**Vercel (current):** the repository is linked to the Vercel project
+`hse-audit`; every push to the production branch builds (`npm run build`, Node
+22) and publishes to https://hse-audit-nine.vercel.app. `vercel.json` holds
+the SPA rewrite and the service-worker cache header. The base path is `/`
+there (Vite reads `VERCEL=1`); set `BASE_PATH` to build for another path.
+
+**GitHub Pages (alternative):** the app also builds for Pages with two GitHub
+Actions workflows, `ci.yml` (typecheck, unit tests, end-to-end tests, build on
+every push) and `deploy.yml` (publish `dist/` to Pages on every push to `main`).
 
 The workflow files live in `docs/github-workflows/` because the GitHub App
 used by the cloud coding session is not allowed to create files under
