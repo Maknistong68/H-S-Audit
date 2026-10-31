@@ -12,6 +12,7 @@ import { ItemMediaTools } from '../components/ItemMedia';
 import { MediaStrip } from '../components/MediaStrip';
 import { NoteField, type NoteFieldHandle } from '../components/NoteField';
 import { PositiveList } from '../components/PositiveList';
+import { ReadyText } from '../components/ReadyText';
 import { RESULT_OPTIONS } from '../components/ResultControl';
 import { TopBar } from '../components/TopBar';
 import { useAudit } from '../hooks/useAudit';
@@ -63,11 +64,16 @@ function FindingRow({ auditId, auditNo, item, answer, media, lang }: { auditId: 
         }}
       />
       <div class="tool-row" role="toolbar" aria-label="Finding tools">
+        <ReadyText
+          itemId={item.id}
+          onPick={(text) => (handle.current ? handle.current.append(text) : void flushPendingWrites().then(() => repo.appendNote(auditId, item.id, text)))}
+        />
         <ItemMediaTools
           auditId={auditId}
           auditNo={auditNo}
           owner={owner}
           lang={lang}
+          context={item.text}
           onInterim={setInterim}
           onDictated={(text) => (handle.current ? handle.current.append(text) : void flushPendingWrites().then(() => repo.appendNote(auditId, item.id, text)))}
         />

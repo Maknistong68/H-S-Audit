@@ -1,6 +1,5 @@
 import { test, expect, vi } from 'vitest';
 import { fitWithin, processPhoto, UnsupportedPhotoError } from '../../src/media/photo';
-import { pickAudioMime, createMemoRecorder, MEMO_MAX_MS } from '../../src/media/audio';
 import { dictationAvailable, appendDictated, createDictation } from '../../src/media/dictation';
 
 test('fitWithin', () => {
@@ -19,103 +18,48 @@ test('undecodable photo throws UnsupportedPhotoError', async () => {
   ).rejects.toBeInstanceOf(UnsupportedPhotoError);
 });
 
-test('pickAudioMime prefers opus then mp4', () => {
-  expect(pickAudioMime((m) => m === 'audio/mp4')).toBe('audio/mp4');
-  expect(pickAudioMime(() => true)).toBe('audio/webm;codecs=opus');
-  expect(pickAudioMime(() => false)).toBeNull();
-});
-
-test('memo recorder collects chunks, ticks, and auto-stops at the cap', async () => {
-  vi.useFakeTimers();
-  let t = 0;
-  const now = () => t;
-  class FakeRecorder {
-    static isTypeSupported() { return true; }
-    ondataavailable: ((e: { data: Blob }) => void) | null = null;
-    onstop: (() => void) | null = null;
-    state = 'inactive';
-    constructor(public stream: unknown, public opts: unknown) {}
-    start() { this.state = 'recording'; }
-    stop() {
-      this.state = 'inactive';
-      this.ondataavailable?.({ data: new Blob([new Uint8Array([1, 2])]) });
-      this.onstop?.();
-    }
-  }
-  const track = { stop: vi.fn() };
-  const stream = { getTracks: () => [track] } as unknown as MediaStream;
-  const ticks: number[] = [];
-  const done = vi.fn();
-  const err = vi.fn();
-  const rec = createMemoRecorder(
-    { onTick: (ms) => ticks.push(ms), onDone: done, onError: err },
-    { getStream: async () => stream, Recorder: FakeRecorder as unknown as typeof MediaRecorder, now, setInterval, clearInterval },
-  );
-  await rec.start();
-  expect(rec.recording()).toBe(true);
-  t = 1000;
-  await vi.advanceTimersByTimeAsync(1000);
-  expect(ticks.at(-1)).toBe(1000);
-  t = MEMO_MAX_MS;
-  await vi.advanceTimersByTimeAsync(1000);
-  await vi.runOnlyPendingTimersAsync();
-  expect(rec.recording()).toBe(false);
-  expect(done).toHaveBeenCalledOnce();
-  expect(done.mock.calls[0][0]).toMatchObject({ mime: 'audio/webm;codecs=opus', durationMs: MEMO_MAX_MS });
-  expect(new Uint8Array(done.mock.calls[0][0].data)).toEqual(new Uint8Array([1, 2]));
-  expect(track.stop).toHaveBeenCalled();
-  expect(err).not.toHaveBeenCalled();
-  vi.useRealTimers();
-});
-
-test('memo recorder stops and saves when the page is hidden', async () => {
-  vi.useRealTimers();
-  class FakeRecorder {
-    static isTypeSupported() { return true; }
-    ondataavailable: ((e: { data: Blob }) => void) | null = null;
-    onstop: (() => void) | null = null;
-    state = 'inactive';
-    constructor(public stream: unknown, public opts: unknown) {}
-    start() { this.state = 'recording'; }
-    stop() {
-      this.state = 'inactive';
-      this.ondataavailable?.({ data: new Blob([new Uint8Array([9])]) });
-      this.onstop?.();
-    }
-  }
-  let hidden: (() => void) | null = null;
-  const stream = { getTracks: () => [{ stop: () => {} }] } as unknown as MediaStream;
-  const done = vi.fn();
-  const rec = createMemoRecorder(
-    { onTick: () => {}, onDone: done, onError: vi.fn() },
-    {
-      getStream: async () => stream,
-      Recorder: FakeRecorder as unknown as typeof MediaRecorder,
-      now: () => 0,
-      onPageHidden: (fn) => {
-        hidden = fn;
-        return () => {
-          hidden = null;
-        };
-      },
-    },
-  );
-  await rec.start();
-  expect(hidden).not.toBeNull();
-  hidden!();
-  await new Promise((r) => setTimeout(r, 20));
-  expect(rec.recording()).toBe(false);
-  expect(done).toHaveBeenCalledOnce();
-  expect(hidden).toBeNull(); // listener released with the microphone
-});
-
 test('dictation availability and text joining', () => {
   expect(dictationAvailable({ webkitSpeechRecognition: class {} }, true)).toBe(true);
   expect(dictationAvailable({ webkitSpeechRecognition: class {} }, false)).toBe(false);
   expect(dictationAvailable({}, true)).toBe(false);
-  expect(appendDictated('', ' hello ')).toBe('hello');
+  expect(appendDictated('', ' hello ')).toBe('Hello');
   expect(appendDictated('a', 'b')).toBe('a b');
-  expect(appendDictated('a\n', 'b')).toBe('a\nb');
+  expect(appendDictated('a\n', 'b')).toBe('a\nB');
+  expect(appendDictated('No permit.', 'workers were exposed')).toBe('No permit. Workers were exposed');
+  expect(appendDictated('', 'the ram\'s were missing full stop')).toBe('The RAMS were missing.');
+});
+
+test('dictation asks for five guesses, keeps the best audit-language one, and biases toward HSE phrases', () => {
+  let inst: FakeRec | undefined;
+  class Phrase {
+    constructor(public phrase: string, public boost: number) {}
+  }
+  class FakeRec {
+    lang = '';
+    continuous = false;
+    interimResults = false;
+    maxAlternatives = 1;
+    phrases: unknown[] = [];
+    onresult: ((e: unknown) => void) | null = null;
+    onerror: ((e: { error: string }) => void) | null = null;
+    onend: (() => void) | null = null;
+    constructor() { inst = this; }
+    start() {}
+    stop() { this.onend?.(); }
+  }
+  const final = vi.fn();
+  const d = createDictation(
+    { onFinal: final, onInterim: vi.fn(), onError: vi.fn(), onEnd: vi.fn() },
+    { lang: 'en-GB', win: { webkitSpeechRecognition: FakeRec, SpeechRecognitionPhrase: Phrase }, context: 'Are approved RAMS available for all current tasks?' },
+  );
+  d.start();
+  expect(inst!.maxAlternatives).toBe(5);
+  expect((inst!.phrases as Phrase[]).map((p) => p.phrase)).toContain('RAMS');
+  inst!.onresult!({
+    resultIndex: 0,
+    results: [Object.assign([{ transcript: 'the rums were not a proved', confidence: 0.6 }, { transcript: 'the rams were not approved', confidence: 0.55 }], { isFinal: true })],
+  });
+  expect(final).toHaveBeenCalledWith('the RAMS were not approved');
 });
 
 test('dictation splits final and interim, forwards errors', () => {

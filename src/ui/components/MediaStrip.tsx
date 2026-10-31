@@ -6,11 +6,15 @@ import { saveOrShare } from '../download';
 import { useLiveQuery } from '../hooks/useLiveQuery';
 import { useObjectUrl } from '../hooks/useObjectUrl';
 import { Icon } from './icons';
-import { formatClock } from './MemoButton';
 import { Sheet } from './Sheet';
 import { toast } from './toast';
 
-/** Bytes are loaded only for what is on screen: a full-size photo or a memo player. */
+function formatClock(ms: number): string {
+  const s = Math.floor(ms / 1000);
+  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+}
+
+/** Bytes are loaded only for what is on screen: a full-size photo or a memo player (memos from older audits). */
 function useMediaBytes(id: string): Media | undefined {
   return useLiveQuery(() => repo.getMedia(id), [id]);
 }

@@ -1,0 +1,272 @@
+{
+  "B1.1": [
+    "Cable pulling works were ongoing in the substation area, but no RAMS for the activity was available at the point of work and the crew could not state its approval status. Work was proceeding without documented controls for manual handling, drum stand stability and pinch points.",
+    "The RAMS presented for the steel erection activity carried Aconex code C and had not been revised and resubmitted, yet work was continuing under it. A rejected method statement does not give authority to proceed, and the activity must be stopped until a code A or B revision is in place.",
+    "The method statement held at the work front for blockwork was a superseded revision, while the current approved revision had added controls for working from mobile scaffold towers. Workers were following outdated controls, which showed that document control at site level was not effective.",
+    "The risk assessment attached to the excavation RAMS was generic and did not address the actual site conditions, including the adjacent live road, groundwater ingress and spoil placement near the edge. Location-specific hazards were not identified, so the listed controls could not be relied upon.",
+    "A comparison of the daily activity plan against the RAMS register showed that grouting, waterproofing and temporary lighting installation had no submitted RAMS. The contractor must ensure that every activity on the look-ahead programme has an approved RAMS before work begins.",
+    "The RAMS at the work location was available in English only, while the crew and their chargehand spoke Hindi and Urdu and could not explain the key controls when asked. The method statement had not been briefed or translated, so its controls were not understood by those doing the work."
+  ],
+  "B1.2": [
+    "Workers in the fabrication shop had started grinding and welding before any pre-start briefing was held, and the supervisor arrived after work was already underway. Daily briefings must be delivered by the supervisor before activities start so that the crew understands the hazards and controls for the day.",
+    "The pre-start briefing observed was delivered by the HSE officer while the work supervisor stood aside and did not take part. Ownership of the briefing sits with the line supervisor, and delegating it to HSE staff weakens supervisory accountability for task risks.",
+    "No briefing record was available at the point of work, and the supervisor stated that attendance sheets were kept in the site office and completed at the end of the shift. Records completed after the event do not demonstrate that the briefing took place before work started.",
+    "The briefing record for the concrete pour crew covered generic topics such as hydration and housekeeping and did not mention the pump boom, vibrator use or edge protection relevant to the task. The briefing was not linked to the RAMS for the activity being performed.",
+    "The supervisor delivered the pre-start briefing in English only, while most of the crew spoke Hindi, Urdu or Bengali and no translation was provided. Several workers were unable to describe the hazards of the task when questioned afterwards, so the briefing had not achieved its purpose.",
+    "Signatures on the briefing sheet included workers who were not present at the work location at the time of the audit, and the headcount did not match the attendance list. The integrity of the briefing records could not be relied upon and must be addressed by the site management."
+  ],
+  "B2.1": [
+    "Grinding and welding were ongoing in the fabrication shop with no supervisor present at the work location for the duration of the inspection. High-risk activities such as hot work must not proceed without the designated supervisor at the point of work to monitor controls and intervene.",
+    "The manpower figures presented showed a supervision ratio of approximately one supervisor to fourteen workers at the main work front, against the HSAS requirement of one to eight. The contractor must mobilise additional supervisors or reduce the workforce at the affected work fronts.",
+    "HSE cover across the project did not meet the HSAS ratio, with six HSE personnel allocated to a workforce of nearly three hundred spread over several remote work fronts. Some active work areas were not visited by HSE staff at any point during the shift.",
+    "A single supervisor was assigned to three separate work fronts several hundred metres apart, including an excavation and a lifting operation. Effective supervision of high-risk activities could not be maintained, and each front was left unsupervised for long periods during the day.",
+    "Night shift activities were supported by one supervisor and no HSE officer, although the day shift arrangement met the required ratios. Supervision and safety cover must be maintained to the HSAS ratios on every shift, including nights, weekends and extended working hours.",
+    "The person acting as supervisor for the scaffolding crew was a chargehand with no supervisory appointment letter or training records. Supervision counted toward the HSAS ratio must be provided by appointed and competent supervisors, not by senior workers filling the gap."
+  ],
+  "B2.2": [
+    "No documented procedure for designating competent persons was available, and the contractor relied on job titles alone to decide who could inspect scaffolds, lifting gear and excavations. The criteria for competence, including training, experience and assessment, had not been defined.",
+    "Appointment letters were presented for some competent persons, but they had not been signed by the project manager or construction manager. The authority under which these individuals had been designated could not be confirmed, and the letters must be formally issued and acknowledged.",
+    "The competent person register had not been updated for several months and still listed individuals who had demobilised, while newly appointed scaffold inspectors were missing. The contractor must maintain a live register that reflects the personnel currently on site.",
+    "The designation process did not include any verification of third-party certificates, and two lifting supervisors were found holding certificates that had expired. Designating persons without checking the validity of their qualifications defeats the purpose of the process.",
+    "The competent person procedure described in the approved HSE plan had not been implemented, and the site team was unaware of it when interviewed. No evidence of competence assessments, interviews or practical evaluations for the designated persons was available."
+  ],
+  "B2.3": [
+    "No competent person was identified for confined space entry, although work inside manholes and tanks was included in the current programme. Entry supervisors, attendants and gas testers must be named and trained before such work is planned or permitted.",
+    "The RAMS for excavation works did not name a competent person for daily excavation inspections, and no inspection records were available at the trench. Excavations must be inspected by a designated competent person before each shift and after any event affecting stability.",
+    "Gas testing for hot work and confined space entry was being carried out by whoever was available, and no authorised gas tester was identified on the permit. The person performing atmospheric testing must be trained, designated and named for that role.",
+    "The lifting plan for the mobile crane operation did not identify an appointed person, a competent rigger or a signalman. Workers performing the rigging could not produce third-party certification, and their competence for the lift had not been established before work started.",
+    "The competent person list covered scaffold inspectors and electrical supervisors but did not include LOTO, rescue from height or radiography activities that were planned on site. Hazardous activities without an identified competent person must be added to the register before they proceed."
+  ],
+  "B2.4": [
+    "The designated competent person for the lifting operation was in the site office during the lift, and rigging and signalling were left to the crane crew. The competent person must be present and actively controlling the activity at the point of work for its full duration.",
+    "Scaffold inspection tags had been signed in the name of the competent scaffold inspector, but interviews showed he had not visited the area for over a week and tags were being updated by the erection crew. The recorded inspections could not be verified as genuine.",
+    "A confined space entry was proceeding without the named attendant at the entry point, as he had left to collect equipment from the store. The entrants were left without continuous monitoring or any means of raising the alarm, and the entry should have been suspended.",
+    "The competent person named on the excavation permit was also assigned to supervise a concrete pour elsewhere on site and was not present at the trench. Being named on paper does not satisfy the requirement for active oversight at the work location.",
+    "The electrical competent person had not carried out the required inspection of temporary distribution boards in the work area, and the inspection checklist was blank. Electricians were energising circuits without his attendance or verification, which exposed workers to electrical hazards."
+  ],
+  "B3.1": [
+    "The emergency response plan presented on site was a draft that had not been submitted on Aconex, and no approved revision was available. The contractor must submit the plan and obtain code A or B approval before relying on it for site emergency arrangements.",
+    "The approved emergency response plan was generic and did not address site-specific scenarios such as confined space rescue, rescue from height, heat stress casualties and fire in the fabrication shop. The plan did not reflect the current hazards and activities on the project.",
+    "The emergency response plan carried Aconex code C, and the reviewer's comments had not been addressed or the document resubmitted. Site teams were still working to the rejected version, which cannot be considered an approved plan.",
+    "The approved emergency response plan did not include an up-to-date site layout showing muster points, emergency exits and ambulance routes, and the muster points on site had changed since approval. The plan must be revised and resubmitted to reflect current site conditions.",
+    "The emergency response plan listed emergency coordinators and fire wardens who were no longer on the project, and several contact numbers were out of date. The emergency organisation chart must be maintained so that responders can be reached when needed.",
+    "The emergency response plan was not available at the site office or at the work fronts, and supervisors could not locate a copy when requested. An approved plan that is not accessible to the people who must implement it cannot be considered effective."
+  ],
+  "B3.2": [
+    "Several workers' helmets still displayed an outdated emergency contact number, and the current NEOC number had not been applied. Superseded numbers must be removed from all helmets, signage and vehicle stickers to prevent delays in calling for help during an emergency.",
+    "No NEOC emergency number was displayed at the fabrication shop, the laydown area or the rest shelters visited during the audit. Emergency contact details must be posted at every work front, welfare facility and site entrance so they are visible to all personnel.",
+    "When questioned, workers at the excavation area could not state the emergency number or the location of their muster point. Awareness of the emergency response plan had not been reinforced through induction or toolbox talks, and the gap must be closed through targeted briefings.",
+    "The emergency contact poster at the site office was available in English only, while most of the workforce spoke Arabic, Hindi, Urdu or Bengali. Emergency information must be displayed in languages understood by the workforce so that anyone can raise the alarm.",
+    "Supervisors interviewed were unaware of their roles under the emergency response plan, including conducting headcounts at muster points and reporting to the emergency coordinator. Supervisors must be briefed on their specific emergency duties and tested on them during drills.",
+    "Emergency number posters at the work fronts had faded in the sun and were no longer legible, and some had been removed when welfare cabins were relocated. Emergency signage must be checked and replaced as part of routine site inspections."
+  ],
+  "B3.3": [
+    "No approved drill schedule was available, and the only drill recorded during the period was a fire evacuation of the site office. The contractor must establish an approved programme of drills covering the significant hazards present on site.",
+    "The approved drill schedule included confined space rescue and rescue from height scenarios, but neither drill had been conducted on the planned dates. Planned drills that are not executed do not test the readiness of the emergency response teams or their equipment.",
+    "Drill reports did not record response times, deficiencies observed or corrective actions, and lessons learned were not tracked to closure. Drills must be evaluated against defined objectives, and the findings used to improve the emergency response plan.",
+    "The drill scenarios conducted were limited to office evacuation and did not reflect the high-risk activities on site, such as excavation collapse, heat stroke, electrical shock or crane incidents. Scenarios must be selected from the project risk register and the current activity profile.",
+    "Night shift personnel had not participated in any emergency drill, although night works including concrete pours and lifting operations were ongoing. Drills must cover all shifts and work locations so that every crew knows how to respond.",
+    "Drill records did not show participation of the site medical team or confirm that NEOC was notified, so the interface with external emergency services had never been tested. Future drills should include notification and coordination with the medical team and NEOC as applicable."
+  ],
+  "B4.1": [
+    "A hot work activity was found in progress without a permit to work, and the crew stated that the permit was still being processed. Work requiring a permit must not start until the PTW has been issued, signed and displayed at the work location.",
+    "There was no dedicated permit office or permit coordinator, and permits were being issued informally by supervisors from their vehicles. Without a central coordination point, simultaneous operations and conflicting permits in the same area could not be identified.",
+    "The permit register did not reconcile with the permits observed in the field, with several active permits not recorded and others shown as open that had already been closed. Permit tracking was not effective, and the status of high-risk work across the site could not be confirmed.",
+    "The PTW training material used on site was generic and did not reflect the approved permit to work procedure for the project. Permit issuers and receivers had not been trained on the approved process and could not explain the required authorisation levels.",
+    "Permits displayed at the work locations were missing the signature of the area authority and had no gas test results recorded for the hot work. Incomplete permits give no assurance that the required precautions were checked before work started.",
+    "A hot work permit and a painting permit were active for overlapping activities in the same area, with no cross-reference or SIMOPS assessment. The permit office must coordinate interacting permits to prevent conflicting hazards such as ignition sources near flammable vapours."
+  ],
+  "B4.2": [
+    "Closed permits reviewed in the permit office had no signature from the issuer confirming that the work area had been inspected and returned to a safe condition. Permits were being closed by the receiver alone without any positive verification by the issuing authority.",
+    "Following completion of hot work, no fire watch was maintained, and the permit was closed immediately without a post-work check for smouldering material. The permit system must require a fire watch period and a final inspection of the area before closure.",
+    "Isolations applied under LOTO for the pump maintenance had been removed by the crew before the permit was signed off, and no reinstatement check was recorded. Equipment must not be returned to service until the issuer has verified the removal of isolations and the safe condition.",
+    "In several locations, permits for completed works were not available at the work front or in the permit office, so closure could not be verified at all. The status of these works and the safety of the affected areas could not be confirmed during the audit.",
+    "The permit form did not include a handback section to verify housekeeping, removal of barricades and reinstatement of guards and covers. The permit form must be revised so that these checks are completed and signed before a permit can be closed."
+  ],
+  "B5.1": [
+    "No procedure for identification of underground utilities was available, and excavation was proceeding based on the operator's judgement alone. Excavating without a utility survey exposes workers to striking live cables, water mains or pipelines.",
+    "The cable avoidance tool and signal generator used on site had no valid calibration certificate, and the operator had not been trained in their use. Detection results from unverified equipment and untrained users cannot be relied upon for safe excavation.",
+    "The as-built drawings and utility records used for the excavation were outdated and did not show recently installed medium voltage cables in the area. Utility records must be updated as new services are installed so that clearance is based on current information.",
+    "Detected utilities had not been marked on the ground with paint, pegs or flags at the excavation location, and markings shown on the survey drawing had not been transferred to site. Workers could not identify where live services ran beneath the work area.",
+    "Mechanical excavation was being carried out directly over a marked service route without trial pits or hand digging to confirm the depth and position of the utility. Trial holes must be excavated by hand before any mechanical excavation within the safe distance of known services."
+  ],
+  "B5.2": [
+    "Excavation permits were issued without any reference to a utility clearance certificate, and the permit form did not require one to be attached. The utility clearance process operated independently of the permit to work system, so excavation could be authorised without clearance.",
+    "A utility clearance had been obtained for the excavation, but it had expired and the permit was renewed without the clearance being reissued. The permit system must check that utility clearance remains valid for the full duration of the work.",
+    "The permit issuer was not aware whether utility clearance had been obtained for the trench and had no access to the clearance records. Permit issuers must verify a valid utility clearance before authorising any ground disturbance activity.",
+    "The utility clearance drawing was not attached to the excavation permit displayed at the work location. The crew therefore had no visual reference of the identified services while digging, and the clearance could not be checked against the work area.",
+    "The excavation had been extended beyond the boundary covered by the original utility clearance, but the permit was not revised and no additional clearance was obtained. Any change in work area or scope must trigger a new utility clearance through the permit system."
+  ],
+  "B5.3": [
+    "Drilling for fence post foundations and earthing rods was carried out without utility clearance, as the contractor considered the system to apply only to excavation. All ground penetrations, regardless of depth or method, must be covered by the utility clearance system.",
+    "Core drilling through an existing slab and wall was being performed without scanning for embedded conduits, and no clearance had been obtained. Structure penetration exposes workers to embedded live cables and must be included in the utility clearance system.",
+    "Survey pegs and temporary signage posts were being driven into the ground in an area with known buried services, and no utility clearance had been requested. The contractor's procedure did not define which shallow activities required clearance.",
+    "Piling and soil investigation boreholes had been carried out by a subcontractor without following the main contractor's utility clearance process. The system must be applied to all subcontractor and specialist activities that penetrate the ground.",
+    "Anchor bolt drilling into an existing concrete structure was carried out without any check for embedded services, and the RAMS did not mention penetration hazards. The utility clearance system must cover structure penetrations such as anchoring, coring and chasing."
+  ],
+  "B6.1": [
+    "The subcontractor management plan had not been updated to include a pre-qualification and screening process, and subcontractors had been mobilised on the basis of commercial evaluation only. HSSE capability was not assessed before award, leaving the contractor exposed to poorly prepared subcontractors.",
+    "A subcontractor screening procedure was described in the HSE plan, but no completed screening forms were available for the subcontractors currently on site. The process existed on paper but was not being implemented in practice.",
+    "A screening process was in place, but there was no monitoring to confirm it was being applied consistently, and two recently mobilised subcontractors had bypassed it. The contractor must periodically audit the effectiveness of its screening and evaluation process.",
+    "The subcontractor evaluation process did not include any HSSE weighting or minimum pass score, so a subcontractor with a poor safety record could still be approved. Clear HSSE acceptance criteria must be defined and applied to every subcontractor.",
+    "Sub-subcontractors and labour supply agencies working under approved subcontractors had not been screened or registered with the main contractor. The screening process must cover every tier of the supply chain working on site."
+  ],
+  "B6.2": [
+    "Two subcontractors had mobilised and started work before any HSSE pre-mobilisation assessment was completed, and their assessments were dated several weeks after their start on site. The assessment must be completed and accepted before any subcontractor commences work.",
+    "The HSSE assessment for the painting subcontractor recorded its main scope of work as not applicable, so the hazards of that activity were never assessed. The assessment did not reflect the actual scope being performed on site.",
+    "Pre-mobilisation assessments were limited to confirming that a safety officer had been nominated and did not review RAMS, equipment certification, training records or the subcontractor's HSE plan. The assessment was superficial and did not establish HSSE readiness.",
+    "No pre-mobilisation assessment was available for the scaffolding subcontractor, although scaffolding was one of the highest-risk scopes on the project. The contractor could not demonstrate that the subcontractor met HSSE requirements before starting work.",
+    "The pre-start assessment checklist for the latest subcontractor had been signed by the commercial team without any involvement of HSE personnel. HSSE compliance assessments must be carried out or reviewed by competent HSE staff to be meaningful."
+  ],
+  "B6.3": [
+    "The subcontractor evaluation form did not request past HSE statistics such as lost time injury frequency, fatalities or regulatory enforcement actions. The subcontractor's previous HSE performance was therefore not considered in the selection decision.",
+    "Evaluation criteria had not been documented, and subcontractor approval relied on the personal judgement of the procurement manager. Without defined criteria, the evaluation was neither consistent between subcontractors nor auditable.",
+    "Pre-qualification questionnaires had been completed by subcontractors, but their responses on HSE management systems were accepted without supporting evidence such as certificates, procedures or audit reports. Self-declarations alone do not demonstrate that adequate systems exist.",
+    "The subcontractor management plan included a documented scoring scheme, but the completed evaluations did not apply it and no scores were recorded. The evaluations could not demonstrate that the documented criteria had been met.",
+    "The evaluation did not consider the subcontractor's proposed HSE resources, supervision arrangements or training plans for the project scope. Only general experience on unrelated projects had been reviewed, which did not show the subcontractor could manage the risks of this work."
+  ],
+  "B6.4": [
+    "No documentation confirmed the supervision arrangements for the electrical subcontractor, and the crew stated they reported directly to the main contractor's foreman. Responsibilities for day-to-day supervision of the subcontractor's work were unclear.",
+    "The subcontractor organisation chart did not identify supervisors or HSE personnel, and the number of supervisors on site was below the HSAS ratio for the subcontractor's manpower. Supervision arrangements must be documented, resourced and verified.",
+    "Supervision of a labour supply subcontractor had been assumed by the main contractor, but no named supervisor was assigned and no handover was documented. Workers were found working with no one accountable for their activities at the work front.",
+    "The supervision arrangements documented at mobilisation had not been updated after the subcontractor significantly increased its manpower and opened new work fronts. The documented arrangement no longer reflected the workforce on site.",
+    "The subcontractor's supervisors had not been inducted or briefed on the main contractor's permit to work and RAMS processes. Confirmed supervision arrangements must ensure that subcontractor supervisors are familiar with and able to apply project systems."
+  ],
+  "B6.5": [
+    "No subcontractor HSSE performance tracking was in place, and incidents and observations were not recorded against individual subcontractors. The contractor could not identify which subcontractors were underperforming or where intervention was required.",
+    "Monthly HSSE reports presented aggregate statistics for the whole project but did not break down leading or lagging indicators by subcontractor. Subcontractor performance was therefore not visible to the project management team.",
+    "Monthly subcontractor evaluations had been carried out, but the results were not shared with the subcontractors or reviewed in management meetings. Tracking without feedback to the subcontractor does not drive any improvement in performance.",
+    "Subcontractor evaluations had not been carried out for the last two months for several subcontractors on site, and the performance tracker had not been updated. Performance monitoring must be maintained throughout the project lifecycle, not only at mobilisation.",
+    "The tracking system relied only on lagging indicators such as incidents and did not include leading indicators such as inspections, observations closed, training compliance and toolbox talks. Performance tracking must include proactive measures to identify problems early."
+  ],
+  "B6.6": [
+    "Repeated non-compliances by the scaffolding subcontractor had been recorded over several months, but no improvement plan, warning letter or meeting with subcontractor management was documented. Underperformance was being recorded without any action being taken.",
+    "An improvement plan had been issued to an underperforming subcontractor, but follow-up evaluations showed the same findings recurring and the plan was not revisited. The effectiveness of the corrective actions was never verified.",
+    "The current evaluation report failed to assess the subcontractor's actual scope of work, so performance shortfalls in that activity were not identified or addressed. Improvement actions cannot be effective when the evaluation does not capture the subcontractor's real risks.",
+    "Corrective actions raised against subcontractors were closed in the tracker without evidence of implementation, such as photographs, training records or re-inspection results. Closure must be supported by objective evidence and verified by the contractor.",
+    "The contractor's consequence management procedure had not been applied to subcontractors, and no escalation was made despite one subcontractor ranking lowest for consecutive months. Escalation steps must be defined and applied consistently to subcontractors that do not meet expectations."
+  ],
+  "B6.7": [
+    "The electrical engineer's CV had been approved, but there was no formal appointment letter from the project manager confirming his responsibility for temporary electrical installations and inspections. His authority over electrical works on the project was therefore not established.",
+    "Site electricians could not produce any competency assessment or recognised electrical qualification, and their competence had been accepted on the basis of claimed experience alone. Electricians working on temporary installations must be assessed and authorised before work.",
+    "No inspection records were available for the temporary distribution boards in the fabrication shop, and one panel was found without an RCD and with its door unlocked. Inspections by the electrical supervisor were not being carried out at the required frequency.",
+    "Inspection checklists for temporary electrical installations had been completed and signed by HSE officers rather than by the electrical supervisor or engineer. Electrical inspections must be carried out by competent electrical personnel who can identify technical defects.",
+    "RCD and ELCB trip testing was not recorded for portable generators and distribution boards, and no calibrated testing instrument was available on site. The protective devices could not be confirmed to operate as required in the event of an earth fault.",
+    "Temporary cables were routed across vehicle access roads and through standing water, and these defects had not been identified in the electrical supervisor's inspection records. The inspections were not effective in detecting obvious hazards and must be reviewed."
+  ],
+  "B6.8": [
+    "The electrical equipment register had not been updated, and several portable power tools and extension leads found in use were not listed. Equipment missing from the register cannot be tracked for inspection or testing and may be unsafe.",
+    "Electrical equipment on site did not carry the current colour-coded inspection tag, and the register did not record the most recent inspection date for many items. The register could not demonstrate that equipment was within its inspection period.",
+    "The register listed only generators and distribution boards and excluded hand tools, welding machines and lighting towers. All electrical equipment used on site must be included in the register and subject to periodic inspection.",
+    "The register showed several items as removed from service due to defects, but some of those items were found in use in the work area. The quarantine and removal process for defective electrical equipment was not effective.",
+    "Subcontractor electrical equipment had not been added to the contractor's register or inspected before being brought to site. The contractor must control all electrical equipment on site regardless of ownership, including hired items."
+  ],
+  "B6.9": [
+    "No records of safety meetings with subcontractors were available, and subcontractor supervisors stated they only received instructions through informal discussions. Regular documented meetings are required to communicate requirements and review subcontractor performance.",
+    "Safety meetings with subcontractors were held, but attendance records showed that several subcontractors had not attended for consecutive months. The contractor had not followed up on the non-attendance or made participation mandatory.",
+    "Minutes of subcontractor safety meetings did not record actions, owners or target dates, and the same issues were raised repeatedly without resolution. Meetings must be action-oriented, with each action tracked through to close-out.",
+    "Subcontractor safety meetings had been held only at the start of the project and had not been repeated since mobilisation. The meeting frequency required by the approved HSE plan was not being met.",
+    "The subcontractor safety meetings were attended only by subcontractor safety officers, without their site managers or supervisors. Decision-makers from each subcontractor must participate so that agreed actions are resourced and implemented."
+  ],
+  "B7.1": [
+    "The training needs analysis did not include mandatory courses for supervisors and construction leaders, such as risk assessment, permit to work and incident investigation. Training requirements by role had not been fully identified, leaving key positions without required competence.",
+    "The electrical safety course had been delivered by HSE personnel without relevant electrical technical knowledge, and no train-the-trainer certificate or equivalent was available. Training must be delivered by qualified and competent trainers.",
+    "The training matrix showed numerous workers with overdue or missing mandatory training, including working at height and confined space awareness, while they were assigned to those activities. The contractor must restrict such tasks to trained personnel.",
+    "Training records consisted of attendance sheets without course content, duration or assessment results, so the effectiveness of the training could not be confirmed. Records must demonstrate both attendance and the competence achieved.",
+    "The training plan had not been implemented as scheduled, and courses planned for the past two months had been cancelled without rescheduling. The contractor could not demonstrate progress against its approved training plan.",
+    "Training sessions were delivered in English only, and the workers interviewed could not recall the key content of courses they had signed for. Training must be delivered in languages understood by the workforce and checked for understanding."
+  ],
+  "B7.2": [
+    "Several workers interviewed at the work front had not received the NEOM approved HSE induction, and their names did not appear in the induction records. All personnel must complete the approved induction before starting work on site.",
+    "No refresher induction had been delivered since the initial induction, and a senior team member's last recorded induction was well over a year old. The refresher interval had not been defined, and refresher training was not being managed.",
+    "Visitors and delivery drivers were entering the site without receiving any induction or escorted visitor briefing. A visitor induction process must be implemented and recorded at the site entrance before access is granted.",
+    "The induction material in use was the contractor's own presentation and did not include NEOM mandatory content such as the life saving rules and the NEOC emergency numbers. The induction delivered must be the approved version.",
+    "There was no system for identifying inducted personnel on site, such as helmet stickers or ID card endorsement, so supervisors could not verify induction status. A visible identification method must be introduced for all inducted workers and visitors.",
+    "Induction records did not show expiry or refresher due dates, and there was no tracker to flag personnel due for refresher induction. The contractor must define the refresher period and track compliance for every worker."
+  ],
+  "B8.1": [
+    "Workers interviewed were unaware of how to report a near miss or unsafe condition and stated they would only inform their supervisor verbally. The reporting process had not been communicated effectively through induction and toolbox talks.",
+    "No incident reporting flow chart or posters were displayed at the work fronts, rest shelters or site offices visited during the audit. Reporting arrangements must be visibly posted in languages the workforce understands.",
+    "One HSE officer recorded zero observation reports for two consecutive months, and the overall observation rate was very low for the size of the workforce. The low reporting rate indicated that the process was not being actively used or promoted.",
+    "Several workers' helmets displayed an old emergency number, and posters in the welfare area showed superseded contact details for incident reporting. Outdated information may delay the reporting of incidents and the response to emergencies.",
+    "A minor hand injury and a near miss described by workers during interviews had not been reported or recorded in the incident log. Unreported events prevent investigation and learning and indicate a weak reporting culture on site.",
+    "Observation cards were available in English only, and no drop boxes or alternative reporting channels were provided for workers who could not write. The reporting system must be accessible to the whole workforce, including through verbal or digital channels."
+  ],
+  "B9.1": [
+    "Several fire extinguishers in the fabrication shop had inspection tags that were overdue by more than a month. Monthly inspections had not been carried out, and the serviceability of the extinguishers could not be confirmed.",
+    "The fire extinguisher at the hot work location was blocked by stacked materials and could not be reached quickly. Fire fighting equipment must be kept accessible, unobstructed and clearly signed at all times.",
+    "Only water extinguishers were provided near the electrical distribution panels, which are unsuitable for electrical fires. Extinguishers must be selected to match the fire class of the hazard, such as CO2 units for electrical equipment.",
+    "No fire extinguisher was available at the welding and cutting activity, although the hot work permit required one at the point of work. Hot work must not proceed without suitable fire fighting equipment and a trained fire watch immediately available.",
+    "Two extinguishers had pressure gauges reading in the red zone, and another had a missing safety pin and broken seal, indicating it had been discharged. Damaged or discharged extinguishers must be removed and replaced immediately.",
+    "The fire extinguisher register was not up to date, and several locations shown on the site fire plan had no extinguisher installed. Missing extinguishers had not been identified during routine inspections or replaced."
+  ],
+  "B9.2": [
+    "The oxy-acetylene set in use had flashback arrestors fitted only at the torch end and not at the regulator outlets. Flashback arrestors must be fitted at both the regulator and torch ends to prevent a flame returning into the cylinders.",
+    "Oxygen and acetylene cylinders were standing unsecured on a trolley without a chain or restraint, and one acetylene cylinder was lying horizontally. Cylinders must be secured upright to prevent falls, valve damage and release of gas.",
+    "The hoses on the oxy-fuel rig were cracked and repaired with tape, and the hose connections were fastened with wire instead of approved crimped clips. Damaged hoses must be replaced immediately to prevent gas leaks and fire.",
+    "Oxygen and fuel gas cylinders were stored together in the same cage without the required separation distance or a fire-resistant barrier. Oxidisers and flammable gases must be segregated during storage to reduce the risk of fire spread.",
+    "Cylinders were left with regulators fitted and valves open after work had stopped, and stored cylinders had no valve protection caps in place. Valves must be closed and caps fitted whenever cylinders are not in use.",
+    "The oxy-fuel equipment had no inspection tag or record of pre-use checks, and the operator could not demonstrate how to carry out a leak test. Users must be trained, and the equipment must be inspected before each use."
+  ],
+  "B9.3": [
+    "Diesel, paints and thinners were stored inside the fabrication shop next to the welding area without a flammable storage cabinet. Flammable materials must be stored away from ignition sources in approved containers or ventilated cabinets.",
+    "The chemical storage area had no bund or secondary containment, and spillage from drums was visible on the ground around the store. Storage must prevent leaks from spreading and contaminating the ground, and spill kits must be provided.",
+    "Safety data sheets were not available at the chemical store, and several containers were not labelled with their contents or hazard symbols. Workers could not identify the hazards of the materials they were handling.",
+    "Oxidisers such as oxygen cylinders were stored adjacent to fuel and paint drums without any segregation. Incompatible materials must be separated in accordance with their safety data sheets to prevent intensified fires.",
+    "No hazard warning or no-smoking signs and no fire extinguisher were provided at the flammable storage area, and workers were observed smoking nearby. Controls against ignition must be enforced around all flammable stores.",
+    "Combustible packaging, timber offcuts and cardboard waste had accumulated around the generator and the diesel tank. Combustible materials must be removed regularly to reduce the fire load near ignition sources."
+  ],
+  "B10.1": [
+    "A PPE policy had been developed, but two workers were found wearing damaged safety shoes and burnt reflective vests. The policy was not being enforced through routine inspection and replacement of damaged PPE.",
+    "Several workers were observed without safety glasses or gloves, which form part of the NEOM 5 point PPE requirement, and supervisors did not intervene. The minimum PPE requirement was not being enforced at the work front.",
+    "There was no PPE issue register or replacement record, and workers stated they had to buy their own replacement gloves. The contractor must issue and replace PPE free of charge and keep a record of each issue.",
+    "Safety helmets in use had no visible date of manufacture, and some were brittle and cracked from prolonged sun exposure. The PPE policy did not define inspection and replacement intervals for helmets used in desert conditions.",
+    "Chin straps were not being worn by workers at height, although this was required by the contractor's PPE policy. Compliance with the policy was not monitored, and helmets could be dislodged in a fall.",
+    "The PPE policy had not been communicated to subcontractor personnel, several of whom were wearing non-compliant footwear and no high-visibility vests. The policy must be applied and enforced for every worker on site."
+  ],
+  "B10.2": [
+    "A worker assisting with hot work had a burnt reflective vest because no welding apron or leather gloves had been provided, leaving him exposed to sparks and slag. Task-specific PPE must be issued for each activity as identified in the RAMS.",
+    "SCBA sets and rescue equipment required by the confined space RAMS were not available at the entry point. Entry was planned without the equipment needed for emergency rescue, and it must not proceed until the equipment is in place.",
+    "Workers carrying out concrete chipping and grinding were not wearing hearing protection or dust masks, although the RAMS identified noise and silica dust hazards. Task-specific PPE was not being provided or used.",
+    "Full body harnesses in use on the scaffold had no inspection tags, and one harness showed frayed webbing and a damaged lanyard hook. Fall protection equipment must be inspected before use and removed from service if defective.",
+    "Workers applying waterproofing chemicals were not wearing chemical-resistant gloves or face shields as specified in the safety data sheet. PPE must be selected to match the specific chemical hazard of the product being used.",
+    "Welders were using helmets with cracked or incorrect filter lenses, and no welding screens were provided to protect adjacent workers from arc flash. Eye and face protection must be suitable for the welding process and maintained in good condition."
+  ],
+  "B11.1": [
+    "The site clinic lacked essential equipment such as an AED, oxygen supply and emergency medicines, and no inventory checklist was maintained. The facility could not provide an adequate emergency response.",
+    "No dedicated ambulance was available on site during the audit, and the contractor relied on a shared ambulance stationed at another project several kilometres away. Response times to remote work fronts could not be assured.",
+    "The ambulance was being used for routine transport of staff and was away from site at the time of the audit. The ambulance must be dedicated to emergency use and remain available at all times during working hours.",
+    "The ambulance inspection checklist had not been completed, and the stretcher, oxygen cylinder and trauma kit inside the vehicle were incomplete. Ambulance equipment must be checked daily and restocked after each use.",
+    "The air conditioning in the medical clinic was not working, there was no temperature control for medicine storage, and storage arrangements did not meet MOH requirements. The facility conditions were not suitable for treating patients.",
+    "Remote work fronts had no first aid stations or first aid kits, and the nearest clinic was a long drive away. First aid provisions must be available at every work location in addition to the main clinic."
+  ],
+  "B11.2": [
+    "The day shift was covered by one nurse and one paramedic for a workforce of nearly three hundred, which is below the NEOM construction safety standard requirement for this manpower band. Additional MOH-licensed medical staff must be mobilised.",
+    "The paramedic on site could not produce a valid MOH license, and his BLS certification had expired. Medical staff must hold valid licenses and current certifications before being deployed on the project.",
+    "No medical staff were present during the night shift, although concrete pours and lifting operations were ongoing. Medical cover must be provided on all shifts in line with the manpower working at the time.",
+    "The medical staff roster did not account for leave and rest days, which left the clinic unattended on some working days. Continuous medical cover must be planned with relief staff available.",
+    "The contractor had not appointed a site doctor, although the total manpower exceeded the threshold at which a doctor is required under the NEOM standard. The medical team must be resourced according to the current workforce size."
+  ],
+  "B11.3": [
+    "The number of trained first aiders on site was well below the ratio required for the workforce, and some work fronts had no first aider present. The contractor must train and appoint additional first aiders.",
+    "First aiders were not identified by helmet stickers or any other marking, and workers could not say who the first aider in their area was. First aiders must be visibly identified and their names posted at each work front.",
+    "The first aid certificates of several appointed first aiders had expired, and no refresher training had been arranged. Only personnel with valid certification may be counted as first aiders on site.",
+    "The list of first aiders had not been updated, and several listed individuals had already demobilised from site. The contractor must maintain a current register of first aiders by area and shift.",
+    "First aid kits assigned to the first aiders were incomplete or missing, and no inspection checklist was maintained. First aiders cannot respond effectively without fully stocked kits at their work location.",
+    "Night shift crews and remote work fronts had no trained first aiders assigned, as all of them worked the day shift in the main area. First aid cover must be distributed across all shifts and locations."
+  ],
+  "B12.1": [
+    "No occupational health plan was available, and the HSE plan did not address health hazards such as heat stress, noise, dust and manual handling. Occupational health risks were not being managed in a structured way.",
+    "A heat stress management plan was in place, but water stations at remote work fronts were empty and no shaded rest shelters were provided. The occupational health measures in the plan had not been implemented on site.",
+    "No occupational hygiene monitoring of noise, dust or welding fumes had been carried out, although grinding, welding and cutting were ongoing daily. Worker exposures could not be quantified or properly controlled.",
+    "Occupational health records, including clinic visits and heat-related illnesses, were not analysed for trends or reported in the monthly HSE report. Health data was not being used to improve controls.",
+    "Welfare facilities at the work front were inadequate, with toilets not cleaned and no hand washing water available. Basic welfare provisions that support occupational health were not being maintained or inspected."
+  ],
+  "B12.2": [
+    "No health surveillance programme was available for workers exposed to noise, dust and welding fumes. Periodic medical checks such as audiometry and lung function testing had not been arranged for the exposed groups.",
+    "Pre-employment medical examinations had not been completed for several workers, and fitness to work certificates were missing from their personnel files. Workers must be medically assessed before mobilisation to site.",
+    "Crane operators and drivers had no records of periodic medical fitness, including vision and hearing tests. Personnel in safety-critical roles must undergo periodic medical assessment to confirm they remain fit for duty.",
+    "Workers assigned to confined space and work at height activities had not been medically assessed for fitness for those tasks. Task-specific medical clearance must be obtained before workers are assigned to such activities.",
+    "A health surveillance procedure existed, but it had not been implemented, and no records of periodic examinations were available at the clinic. The contractor must implement the programme and maintain confidential medical records."
+  ]
+}

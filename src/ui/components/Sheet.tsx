@@ -1,4 +1,5 @@
 import type { ComponentChildren } from 'preact';
+import { createPortal } from 'preact/compat';
 import { useEffect, useRef, useState } from 'preact/hooks';
 
 const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
@@ -73,7 +74,8 @@ export function Sheet(props: { open: boolean; title: string; onClose(): void; ch
   }, [props.open]);
 
   if (!mounted) return null;
-  return (
+  // Rendered at the end of <body> so no row, panel or sticky header can paint over it.
+  return createPortal(
     <div class={`sheet-backdrop${closing ? ' closing' : ''}`} onClick={props.onClose}>
       <div
         class="sheet"
@@ -94,6 +96,7 @@ export function Sheet(props: { open: boolean; title: string; onClose(): void; ch
         </div>
         <div class="sheet-body">{props.children}</div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

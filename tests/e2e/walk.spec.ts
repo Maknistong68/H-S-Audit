@@ -67,14 +67,25 @@ test('field controls meet the 48 px tap target', async ({ page }) => {
   expect((await page.getByRole('button', { name: /Fire/ }).boundingBox())!.height).toBeGreaterThanOrEqual(48);
 });
 
-test('next unanswered and tag editing', async ({ page }) => {
+test('next unanswered, and ready text drops into the note', async ({ page }) => {
   await newAudit(page);
   await page.getByRole('button', { name: /^A1 / }).click();
   await page.getByRole('button', { name: 'Full' }).click();
   await page.getByRole('button', { name: 'Next unanswered' }).click();
   await expect(page.getByRole('button', { name: 'Full' })).toHaveAttribute('aria-pressed', 'false');
-  await page.getByRole('button', { name: 'Tags' }).click();
-  await page.getByRole('checkbox', { name: 'Fire' }).check();
-  await page.getByRole('button', { name: 'Done' }).click();
-  await expect(page.getByText('Fire', { exact: true })).toBeVisible();
+  // the question no longer offers tag editing or voice memos
+  await expect(page.getByRole('button', { name: 'Tags' })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Record memo' })).toHaveCount(0);
+  await page.getByRole('button', { name: 'No', exact: true }).click();
+  await page.getByRole('button', { name: 'Ready text' }).click();
+  const options = page.getByRole('dialog', { name: 'Ready text for A2' }).locator('.ready-option');
+  expect(await options.count()).toBeGreaterThanOrEqual(5);
+  const first = (await options.first().innerText()).trim();
+  await options.first().click();
+  await expect(page.getByLabel('Observation note')).toHaveValue(first);
+  // a second pick is combined with the first
+  await page.getByRole('button', { name: 'Ready text' }).click();
+  const second = (await options.nth(1).innerText()).trim();
+  await options.nth(1).click();
+  await expect(page.getByLabel('Observation note')).toHaveValue(`${first} ${second}`);
 });

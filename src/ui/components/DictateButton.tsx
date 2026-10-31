@@ -3,7 +3,7 @@ import { createDictation, dictationAvailable, type Dictation } from '../../media
 import { Icon } from './icons';
 import { toast } from './toast';
 
-export function DictateButton(props: { lang: string; onText(text: string): void; onInterim(text: string): void }) {
+export function DictateButton(props: { lang: string; context?: string; onText(text: string): void; onInterim(text: string): void }) {
   const [online, setOnline] = useState(navigator.onLine);
   const [on, setOn] = useState(false);
   const dictation = useRef<Dictation | null>(null);
@@ -42,7 +42,7 @@ export function DictateButton(props: { lang: string; onText(text: string): void;
           dictation.current = null;
         },
       },
-      { lang: props.lang },
+      { lang: props.lang, context: props.context },
     );
     setOn(true);
     dictation.current.start();

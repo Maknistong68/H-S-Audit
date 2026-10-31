@@ -1,5 +1,5 @@
 import { allItems, builtInTags, checklist, defaultTagsFor } from '../data/checklist';
-import { joinText } from '../domain/text';
+import { appendText } from '../domain/text';
 import type { Result } from '../domain/types';
 import {
   db,
@@ -191,7 +191,7 @@ export const repo = {
 
   /** Appends to whatever the note is at write time (dictation that arrives after the field is gone). */
   appendNote(auditId: string, itemId: string, text: string): Promise<void> {
-    return upsertAnswer(auditId, itemId, (current) => ({ note: joinText(current.note, text) }));
+    return upsertAnswer(auditId, itemId, (current) => ({ note: appendText(current.note, text) }));
   },
 
   setFlag(auditId: string, itemId: string, flagged: boolean): Promise<void> {
@@ -235,7 +235,7 @@ export const repo = {
     await db.transaction('rw', db.positives, db.audits, async () => {
       const p = await db.positives.get(id);
       if (!p) return;
-      await db.positives.put({ ...p, text: joinText(p.text, text), updatedAt: now });
+      await db.positives.put({ ...p, text: appendText(p.text, text), updatedAt: now });
       await touch(p.auditId, now);
     });
   },

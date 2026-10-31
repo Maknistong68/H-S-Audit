@@ -24,6 +24,7 @@ const PATHS = {
   clock: 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM12 7v5l3 2',
   search: 'M11 18a7 7 0 1 0 0-14 7 7 0 0 0 0 14zM20 20l-4-4',
   next: 'M5 12h14M13 6l6 6-6 6',
+  text: 'M4 6h16M4 10h16M4 14h10M4 18h7M17 15l2 3 2-3',
   back: 'M19 12H5M11 18l-6-6 6-6',
 } as const;
 

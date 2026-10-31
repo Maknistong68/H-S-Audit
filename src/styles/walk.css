@@ -518,3 +518,43 @@
   font-size: var(--text-sm);
   color: var(--ink-2);
 }
+
+/* ---- ready text picker */
+.ready-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: clip;
+}
+
+.ready-list li + li {
+  border-top: 1px solid var(--line);
+}
+
+.ready-option {
+  display: block;
+  width: 100%;
+  min-height: var(--tap-min);
+  padding: var(--space-3) var(--space-4);
+  border: 0;
+  background: var(--surface);
+  text-align: left;
+  line-height: var(--leading);
+  transition: background-color var(--motion-150) var(--ease);
+}
+
+.ready-option:hover,
+.ready-option:active {
+  background: var(--accent-soft);
+}
+
+.tips {
+  margin: var(--space-1) 0 0;
+  padding-left: 1.2em;
+}
+
+.tips li + li {
+  margin-top: 2px;
+}

@@ -1,10 +1,11 @@
 import { forwardRef } from 'preact/compat';
 import { useEffect, useImperativeHandle, useRef, useState } from 'preact/hooks';
 import { flushPendingWrites, hasPendingWrite, schedulePendingWrite } from '../../db/flush';
+import { appendText } from '../../domain/text';
 
 export interface NoteFieldHandle {
   focus(): void;
-  /** Appends dictated text and saves. */
+  /** Appends text (dictation or a ready-made finding) and saves. */
   append(text: string): void;
 }
 
@@ -48,10 +49,8 @@ export const NoteField = forwardRef<NoteFieldHandle, Props>(function NoteField(p
     focus: () => textarea.current?.focus(),
     append: (text: string) => {
       const current = textarea.current?.value ?? local;
-      const t = text.trim();
-      if (!t) return;
-      const next = !current ? t : /\s$/.test(current) ? current + t : `${current} ${t}`;
-      save(next);
+      if (!text.trim()) return;
+      save(appendText(current, text));
     },
   }));
 

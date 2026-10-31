@@ -1,12 +1,9 @@
 import { test, expect } from '@playwright/test';
 
-test('settings: dictation language and custom tag persist', async ({ page }) => {
+test('settings: dictation accent and photo copies persist', async ({ page }) => {
   await page.goto('./settings');
-  await page.getByLabel('Dictation language').selectOption('ar-SA');
-  await page.getByRole('button', { name: 'Add tag' }).click();
-  await page.getByLabel('Tag name').fill('Welfare');
-  await page.getByRole('button', { name: 'Save tag' }).click();
-  await expect(page.getByText('Tag "Welfare" added')).toBeVisible(); // the write must land before a reload
+  await expect(page.getByRole('button', { name: 'Add tag' })).toHaveCount(0);
+  await page.getByLabel('Dictation language').selectOption('en-GB');
   await page.getByRole('checkbox', { name: 'Keep a copy of each photo in Downloads' }).uncheck();
   // wait until the setting is really in IndexedDB; a reload mid-write would abort the transaction
   await page.waitForFunction(async () => {
@@ -17,7 +14,6 @@ test('settings: dictation language and custom tag persist', async ({ page }) => 
     return row?.value === false;
   });
   await page.reload();
-  await expect(page.getByLabel('Dictation language')).toHaveValue('ar-SA');
-  await expect(page.getByText('Welfare')).toBeVisible();
+  await expect(page.getByLabel('Dictation language')).toHaveValue('en-GB');
   await expect(page.getByRole('checkbox', { name: 'Keep a copy of each photo in Downloads' })).not.toBeChecked();
 });

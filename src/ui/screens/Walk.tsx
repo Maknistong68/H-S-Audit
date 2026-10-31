@@ -18,7 +18,6 @@ import { MediaStrip } from '../components/MediaStrip';
 import { ModeSwitch } from '../components/ModeSwitch';
 import type { NoteFieldHandle } from '../components/NoteField';
 import { ProgressLine } from '../components/ProgressLine';
-import { TagEditor } from '../components/TagEditor';
 import { TopBar } from '../components/TopBar';
 import { useAudit } from '../hooks/useAudit';
 import { useKeyboardShortcuts, type WalkShortcuts } from '../hooks/useKeyboardShortcuts';
@@ -69,7 +68,6 @@ export function Walk({ id }: { id: string }) {
   const lang = useLiveQuery(() => repo.getSetting('dictationLang', 'en-US'), []) ?? 'en-US';
   const [state, setState] = useState<WalkState | null>(null);
   const [jumpOpen, setJumpOpen] = useState(false);
-  const [tagEditor, setTagEditor] = useState<string | null>(null);
   const [interim, setInterim] = useState('');
   const noteHandle = useRef<NoteFieldHandle | null>(null);
   const searchBox = useRef<HTMLInputElement>(null);
@@ -196,8 +194,6 @@ export function Walk({ id }: { id: string }) {
         auditId={id}
         item={item}
         answer={answers.get(item.id)}
-        tagIds={tagsByItem?.get(item.id) ?? []}
-        tags={tagList}
         expanded={expanded}
         mediaCounts={{ photos: itemMedia.filter((m) => m.type === 'photo').length, audio: itemMedia.filter((m) => m.type === 'audio').length }}
         media={
@@ -207,6 +203,7 @@ export function Walk({ id }: { id: string }) {
               auditNo={audit?.header.auditNo ?? ''}
               owner={owner}
               lang={lang}
+              context={item.text}
               onInterim={setInterim}
               onDictated={(text) => {
                 if (noteHandle.current) noteHandle.current.append(text);
@@ -230,7 +227,6 @@ export function Walk({ id }: { id: string }) {
         onNote={(note) => repo.setNote(id, item.id, note)}
         onFlag={(f) => void repo.setFlag(id, item.id, f)}
         onRepeated={(r) => void repo.setRepeated(id, item.id, r)}
-        onEditTags={() => setTagEditor(item.id)}
         onPrev={() => expand(adjacentItem(item.id, rows, -1) ?? item.id)}
         onNext={() => expand(adjacentItem(item.id, rows, 1) ?? item.id)}
         onNextUnanswered={() => expand(nextUnanswered(item.id, rows, answers) ?? item.id)}
@@ -372,7 +368,6 @@ export function Walk({ id }: { id: string }) {
         }}
       />
 
-      {tagEditor && tagsByItem && <TagEditor open={true} itemId={tagEditor} selected={tagsByItem.get(tagEditor) ?? []} tags={tagList} onClose={() => setTagEditor(null)} />}
 
       <BottomNav auditId={id} />
     </>

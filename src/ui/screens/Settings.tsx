@@ -1,16 +1,19 @@
 import { useEffect, useState } from 'preact/hooks';
-import type { Tag } from '../../db/db';
 import { repo } from '../../db/repo';
 import { PHOTO_COPIES_SETTING } from '../../media/photoCopy';
 import { checkForUpdates } from '../../pwa/updates';
-import { TagManager } from '../components/TagManager';
 import { toast } from '../components/toast';
 import { TopBar } from '../components/TopBar';
 import { useLiveQuery } from '../hooks/useLiveQuery';
 import { paths } from '../paths';
 
+// Matching the recogniser to the speaker's accent is the biggest single gain in dictation accuracy.
 const LANGS = [
-  { value: 'en-US', label: 'English' },
+  { value: 'en-GB', label: 'English — UK accent' },
+  { value: 'en-IN', label: 'English — Indian / Pakistani accent' },
+  { value: 'en-PH', label: 'English — Filipino accent' },
+  { value: 'en-US', label: 'English — US accent' },
+  { value: 'en-AU', label: 'English — Australian accent' },
   { value: 'ar-SA', label: 'Arabic (العربية)' },
 ];
 
@@ -36,7 +39,6 @@ function installed(): boolean {
 export function Settings() {
   const lang = useLiveQuery(() => repo.getSetting('dictationLang', 'en-US'), []);
   const photoCopies = useLiveQuery(() => repo.getSetting(PHOTO_COPIES_SETTING, true), []);
-  const tags = useLiveQuery<Tag[]>(() => repo.listTags(), []);
   const [storage, setStorage] = useState<StorageInfo | null>(null);
 
   useEffect(() => {
@@ -71,7 +73,16 @@ export function Settings() {
               </select>
             </div>
           </div>
-          <p class="panel-note">Dictation uses the phone's speech service and usually needs mobile signal. Voice memos work without it.</p>
+          <div class="panel-note">
+            <p>For the most accurate dictation:</p>
+            <ul class="tips">
+              <li>Pick the accent closest to the person speaking.</li>
+              <li>Hold the phone 15–20 cm from your mouth and turn away from generators and grinders.</li>
+              <li>Speak in short sentences and pause between them. Say “full stop”, “comma” or “new line”.</li>
+              <li>Site terms such as RAMS, PTW, NEOC, HSSE, LOTO, Aconex and Code A are corrected automatically.</li>
+              <li>No signal? Use the microphone on the phone keyboard instead; Gboard and the iPhone keyboard can dictate offline.</li>
+            </ul>
+          </div>
         </section>
 
         <section class="panel">
@@ -95,7 +106,6 @@ export function Settings() {
           </p>
         </section>
 
-        <TagManager tags={tags ?? []} />
 
         <section class="panel">
           <div class="panel-head">

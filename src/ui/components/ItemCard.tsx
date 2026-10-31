@@ -1,18 +1,17 @@
 import type { ComponentChildren } from 'preact';
 import { useEffect, useRef, useState } from 'preact/hooks';
-import type { Answer, Tag } from '../../db/db';
+import type { Answer } from '../../db/db';
+import { appendText } from '../../domain/text';
 import type { ChecklistItem, Result } from '../../domain/types';
 import { Icon } from './icons';
 import { NoteField, type NoteFieldHandle } from './NoteField';
 import { ResultControl, RESULT_OPTIONS } from './ResultControl';
-import { TagText } from './TagChips';
+import { ReadyText } from './ReadyText';
 
 export interface ItemCardProps {
   auditId: string;
   item: ChecklistItem;
   answer?: Answer;
-  tagIds: string[];
-  tags: Tag[];
   expanded: boolean;
   mediaCounts?: { photos: number; audio: number };
   onToggle(): void;
@@ -20,13 +19,12 @@ export interface ItemCardProps {
   onNote(note: string): Promise<void>;
   onFlag(flagged: boolean): void;
   onRepeated(repeated: boolean): void;
-  onEditTags(): void;
   onNext(): void;
   onPrev(): void;
   onNextUnanswered(): void;
-  /** Photo / memo / dictate controls, rendered in the tool row. */
+  /** Photo / dictate controls, rendered in the tool row. */
   media?: ComponentChildren;
-  /** Thumbnails and memos, rendered under the tool row. */
+  /** Thumbnails (and memos from older audits), rendered under the tool row. */
   mediaStrip?: ComponentChildren;
   /** Interim dictation text shown under the note. */
   interim?: string;
@@ -57,6 +55,16 @@ export function ItemCard(props: ItemCardProps) {
       requestAnimationFrame(() => noteHandle.current?.focus());
     }
   }, [noteOpen, result]);
+
+  // Ready text lands in the open note; if the note is still closed, open it and save straight to the answer.
+  const insertText = (text: string) => {
+    if (noteHandle.current) {
+      noteHandle.current.append(text);
+    } else {
+      setNoteOpen(true);
+      void props.onNote(appendText(note, text));
+    }
+  };
 
   const setResult = (r: Result | undefined) => {
     props.onResult(r);
@@ -110,7 +118,6 @@ export function ItemCard(props: ItemCardProps) {
               <span>
                 <b>Weight</b> {item.weight}
               </span>
-              <TagText tagIds={props.tagIds} tags={props.tags} />
             </div>
 
             <ResultControl value={result} onChange={setResult} />
@@ -141,6 +148,7 @@ export function ItemCard(props: ItemCardProps) {
             )}
 
             <div class="tool-row" role="toolbar" aria-label="Item tools">
+              <ReadyText itemId={item.id} onPick={insertText} />
               {props.media}
               <button type="button" class="icon-btn" aria-pressed={!!answer?.flagged} onClick={() => props.onFlag(!answer?.flagged)}>
                 <Icon name="flag" />
@@ -149,10 +157,6 @@ export function ItemCard(props: ItemCardProps) {
               <button type="button" class="icon-btn" aria-pressed={!!answer?.repeated} onClick={() => props.onRepeated(!answer?.repeated)}>
                 <Icon name="repeat" />
                 <span class="caption">Repeated</span>
-              </button>
-              <button type="button" class="icon-btn" onClick={props.onEditTags}>
-                <Icon name="tag" />
-                <span class="caption">Tags</span>
               </button>
             </div>
 
