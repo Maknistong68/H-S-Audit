@@ -24,6 +24,13 @@ export interface WalkRow {
 
 const isAnswered = (answers: ReadonlyMap<string, Answer>, id: string) => answers.get(id)?.result !== undefined;
 
+/** Finished: Full or N/A, or No/Partial with a written note. A No/Partial without a note still needs work. */
+export function isComplete(answer: Answer | undefined): boolean {
+  if (!answer?.result) return false;
+  if (answer.result === 'no' || answer.result === 'partial') return answer.note.trim() !== '';
+  return true;
+}
+
 /** The rows the Walk list shows for a given mode/filter; headers without visible items are dropped. */
 export function visibleRows(
   state: WalkState,
@@ -31,7 +38,8 @@ export function visibleRows(
   tagsByItem: ReadonlyMap<string, string[]>,
   c: Checklist = checklist,
 ): WalkRow[] {
-  const visible = (item: ChecklistItem) => !state.remainingOnly || !isAnswered(answers, item.id);
+  // "Remaining" hides finished questions, but never the one that is open: answering must not make it vanish.
+  const visible = (item: ChecklistItem) => !state.remainingOnly || item.id === state.expandedId || !isComplete(answers.get(item.id));
   const itemRow = (item: ChecklistItem): WalkRow => ({ kind: 'item', id: item.id, item });
 
   if (state.mode === 'sequence') {
@@ -103,4 +111,15 @@ export function adjacentItem(fromId: string | null, rows: WalkRow[], direction: 
   if (idx === -1) return items[0].id;
   const next = items[idx + direction];
   return next ? next.id : null;
+}
+
+/** The next question after `fromId` (wrapping) that is not finished, never `fromId` itself; null when none. */
+export function nextIncomplete(fromId: string, rows: WalkRow[], answers: ReadonlyMap<string, Answer>): string | null {
+  const items = rows.filter((r) => r.kind === 'item');
+  const start = items.findIndex((r) => r.id === fromId);
+  for (let k = 1; k < items.length; k++) {
+    const candidate = items[(start + k + items.length) % items.length];
+    if (candidate.id !== fromId && !isComplete(answers.get(candidate.id))) return candidate.id;
+  }
+  return null;
 }

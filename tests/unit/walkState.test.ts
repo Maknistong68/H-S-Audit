@@ -1,5 +1,5 @@
 import { test, expect } from 'vitest';
-import { visibleRows, nextUnanswered, tagCounts, DEFAULT_WALK_STATE } from '../../src/ui/walk/walkState';
+import { visibleRows, nextUnanswered, tagCounts, isComplete, DEFAULT_WALK_STATE } from '../../src/ui/walk/walkState';
 import { allItems, defaultTagsFor } from '../../src/data/checklist';
 import type { Answer } from '../../src/db/db';
 
@@ -34,6 +34,30 @@ test('search mode and next unanswered', () => {
   expect(nextUnanswered('A1', seq, ans({ A1: 'full', A2: 'no' }))).toBe('A3');
   expect(nextUnanswered('C2.19', seq, ans({ A1: 'full' }))).toBe('A2');
   expect(nextUnanswered(null, seq, ans({}))).toBe('A1');
+});
+
+test('remaining only: Full/N/A are done, No/Partial stay until they have a note, the open question never vanishes', () => {
+  const withNotes = (o: Record<string, [Answer['result'], string]>) =>
+    new Map<string, Answer>(
+      Object.entries(o).map(([k, [result, note]]) => [k, { id: `a:${k}`, auditId: 'a', itemId: k, result, note, flagged: false, repeated: false, updatedAt: 0 }]),
+    );
+  const answers = withNotes({ A1: ['full', ''], A2: ['na', ''], A3: ['no', ''], A4: ['partial', '  '], A5: ['no', 'Plan not approved.'], A6: ['partial', 'Partly done.'] });
+  const ids = (expandedId: string | null) =>
+    visibleRows({ ...DEFAULT_WALK_STATE, remainingOnly: true, expandedId }, answers, tags)
+      .filter((r) => r.kind === 'item')
+      .map((r) => r.id);
+  const shown = ids(null);
+  expect(shown).not.toContain('A1');
+  expect(shown).not.toContain('A2');
+  expect(shown).toContain('A3'); // No without a note is not finished
+  expect(shown).toContain('A4'); // a blank note does not count
+  expect(shown).not.toContain('A5');
+  expect(shown).not.toContain('A6');
+  expect(shown).toContain('A7'); // unanswered
+  expect(ids('A1')).toContain('A1'); // the question being worked on stays put
+  expect(isComplete(answers.get('A3'))).toBe(false);
+  expect(isComplete(answers.get('A5'))).toBe(true);
+  expect(isComplete(undefined)).toBe(false);
 });
 
 test('tag counts', () => {

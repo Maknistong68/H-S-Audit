@@ -558,3 +558,11 @@
 .tips li + li {
   margin-top: 2px;
 }
+
+.row-needs {
+  display: block;
+  margin-top: 3px;
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--warn-ink);
+}

@@ -96,6 +96,7 @@ export function ItemCard(props: ItemCardProps) {
         <span class="row-id">{item.id}</span>
         <span class="row-main">
           <span class="row-q">{item.text}</span>
+          {!expanded && negative && !note.trim() && <span class="row-needs">Note needed</span>}
           {!expanded && previewBits.length > 0 && <span class="row-preview">{previewBits.join('   ')}</span>}
         </span>
         <span class="row-status" id={descriptionId}>

@@ -28,6 +28,9 @@ test('answer in sequence, see it in area and search, persist offline', async ({ 
   await expect(page.getByRole('searchbox')).toHaveValue('gate 2');
   await page.getByRole('tab', { name: 'Sequence' }).click();
   await page.getByRole('checkbox', { name: 'Remaining only' }).check();
+  // B9.1 is finished (Partial with a note) but still open, so it stays until it is closed
+  await expect(page.getByRole('button', { name: /^B9\.1/ })).toBeVisible();
+  await page.getByRole('button', { name: /^B9\.1/ }).click();
   await expect(page.getByRole('button', { name: /^B9\.1/ })).toBeHidden();
   await context.setOffline(false);
 });
@@ -90,3 +93,25 @@ test('next unanswered, and ready text drops into the note', async ({ page }) => 
   await options.nth(1).click();
   await expect(page.getByLabel('Observation note')).toHaveValue(`${first} ${second}`);
 });
+
+test('remaining only keeps the open question until it is finished', async ({ page }) => {
+  await newAudit(page);
+  await page.getByRole('switch', { name: 'Remaining only' }).or(page.getByRole('checkbox', { name: 'Remaining only' })).check();
+  // Full: the question is done, folds away, and the next one opens
+  await page.getByRole('button', { name: /^A1 / }).click();
+  await page.getByRole('button', { name: 'Full', exact: true }).click();
+  await expect(page.getByRole('button', { name: /^A1 / })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: /^A2 / })).toHaveAttribute('aria-expanded', 'true');
+  // No: stays open and listed until a note is written
+  await page.getByRole('button', { name: 'No', exact: true }).click();
+  await page.waitForTimeout(600);
+  await expect(page.getByRole('button', { name: /^A2 / })).toHaveAttribute('aria-expanded', 'true');
+  await page.getByRole('button', { name: 'Next unanswered' }).click();
+  await expect(page.getByRole('button', { name: /^A2 / })).toBeVisible(); // still remaining: no note yet
+  await expect(page.getByRole('button', { name: /^A2 / })).toContainText('Note needed');
+  await page.getByRole('button', { name: /^A2 / }).click();
+  await page.getByLabel('Observation note').fill('Roles were not documented.');
+  await page.getByRole('button', { name: 'Next unanswered' }).click();
+  await expect(page.getByRole('button', { name: /^A2 / })).toHaveCount(0); // complete, so it leaves the list
+});
+

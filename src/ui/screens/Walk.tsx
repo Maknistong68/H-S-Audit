@@ -24,10 +24,11 @@ import { useKeyboardShortcuts, type WalkShortcuts } from '../hooks/useKeyboardSh
 import { useLiveQuery } from '../hooks/useLiveQuery';
 import { DESK_QUERY, useMediaQuery } from '../hooks/useMediaQuery';
 import { paths } from '../paths';
-import { adjacentItem, DEFAULT_WALK_STATE, nextUnanswered, tagCounts, visibleRows, type WalkRow, type WalkState } from '../walk/walkState';
+import { adjacentItem, DEFAULT_WALK_STATE, nextIncomplete, nextUnanswered, tagCounts, visibleRows, type WalkRow, type WalkState } from '../walk/walkState';
 
 const EXPORT_NUDGE_MS = 2 * 60 * 60 * 1000;
 const TOTAL = allItems().length;
+const AUTO_ADVANCE_MS = 350;
 
 interface Group {
   key: string;
@@ -223,7 +224,15 @@ export function Walk({ id }: { id: string }) {
             : undefined
         }
         onToggle={() => expand(expandedId === item.id ? null : item.id)}
-        onResult={(r: Result | undefined) => void repo.setResult(id, item.id, r)}
+        onResult={(r: Result | undefined) => {
+          void repo.setResult(id, item.id, r);
+          // In Remaining mode a Full or N/A finishes the question: let the answer register, then open the next one.
+          // No and Partial stay open until a note is written.
+          if (state?.remainingOnly && (r === 'full' || r === 'na')) {
+            const next = nextIncomplete(item.id, rows, answers);
+            setTimeout(() => expand(next), AUTO_ADVANCE_MS);
+          }
+        }}
         onNote={(note) => repo.setNote(id, item.id, note)}
         onFlag={(f) => void repo.setFlag(id, item.id, f)}
         onRepeated={(r) => void repo.setRepeated(id, item.id, r)}
