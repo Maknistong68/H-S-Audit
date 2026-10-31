@@ -31,7 +31,12 @@ export default defineConfig({
         orientation: 'portrait',
         theme_color: '#0F3D3E',
         background_color: '#FFFFFF',
-        icons: [],
+        description: 'Offline Health & Safety inspection checklist for site audits',
+        icons: [
+          { src: 'icons/icon-192.png', sizes: '192x192', type: 'image/png' },
+          { src: 'icons/icon-512.png', sizes: '512x512', type: 'image/png' },
+          { src: 'icons/maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
+        ],
       },
     }),
   ],

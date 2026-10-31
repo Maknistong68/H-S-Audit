@@ -18,6 +18,50 @@ Open the link above once while online, then:
   screen**).
 
 After that the app opens from the home screen and works with no signal.
+The very first open needs a connection so the app (and the Excel template)
+can be downloaded; from then on it is fully offline.
+
+## On site, then on the PC
+
+1. **Audits → New audit**, fill the header, **Start walk**.
+2. Walk the questions in **Sequence** (A1 → C2.19), by **Area** (Documentation,
+   Site walk, Clinic, Electrical, …) or by **Search**. Tap a result, add a
+   note, photo or voice memo; **Flag** anything to come back to.
+3. **Findings** lists every No/Partial with its note and photos, plus the
+   positive observations. **Score** shows the section and overall percentages.
+4. **Export → Export Excel** builds the Book2-layout workbook on the phone;
+   share it to Teams/Email/WhatsApp from the share sheet or download it.
+   **Export backup** makes a zip (with the memos) that **Import backup** on
+   the home screen can re-open — on the same phone or on the PC.
+
+Nothing is deleted by accident: audits are archived, photos and memos can be
+restored with Undo, and **Export → Snapshots** keeps restore points (every
+15 minutes while you work, and whenever you leave Walk).
+
+## Deploying
+
+The app is static and deploys to GitHub Pages:
+
+1. In the repository go to **Settings → Pages** and set **Source** to
+   **GitHub Actions** (once).
+2. Merge to `main`. The `Deploy to GitHub Pages` workflow builds and publishes
+   `dist/` to https://maknistong68.github.io/h-s-audit/.
+
+Every push also runs `CI` (typecheck, unit tests, end-to-end tests, build).
+
+## Changing the checklist
+
+The question list, weights and section layout come from the cleaned Excel
+template. When the standard changes:
+
+```bash
+node scripts/make-template.mjs path/to/NewChecklist.xlsx public/templates/hs-audit-template.xlsx
+node scripts/extract-checklist.mjs public/templates/hs-audit-template.xlsx src/data/checklist.json
+```
+
+then update the default tags in `src/data/tags.json` and bump
+`TEMPLATE_VERSION` in `scripts/extract-checklist.mjs`. Never commit the
+original audit workbook: it carries names, phone numbers and embedded photos.
 
 ## Development
 
