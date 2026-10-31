@@ -18,7 +18,7 @@ import { useLiveQuery } from '../hooks/useLiveQuery';
 import { paths } from '../paths';
 import { openItemInWalk } from '../walk/openItem';
 
-function FindingRow({ auditId, item, answer, media, lang }: { auditId: string; item: ChecklistItem; answer: Answer; media: Media[]; lang: string }) {
+function FindingRow({ auditId, auditNo, item, answer, media, lang }: { auditId: string; auditNo: string; item: ChecklistItem; answer: Answer; media: Media[]; lang: string }) {
   const { route } = useLocation();
   const [interim, setInterim] = useState('');
   const handle = useRef<NoteFieldHandle | null>(null);
@@ -49,13 +49,14 @@ function FindingRow({ auditId, item, answer, media, lang }: { auditId: string; i
       <div class="item-toolbar" role="toolbar" aria-label="Finding tools">
         <ItemMediaTools
           auditId={auditId}
+          auditNo={auditNo}
           owner={owner}
           lang={lang}
           onInterim={setInterim}
           onDictated={(text) => (handle.current ? handle.current.append(text) : void repo.setNote(auditId, item.id, appendDictated(answer.note, text)))}
         />
       </div>
-      <MediaStrip media={media} />
+      <MediaStrip media={media} auditNo={auditNo} />
     </li>
   );
 }
@@ -119,13 +120,13 @@ export function Findings({ id }: { id: string }) {
           ) : (
             <ul class="list">
               {negatives.map(({ item, answer }) => (
-                <FindingRow key={item.id} auditId={id} item={item} answer={answer} media={mediaByOwner.get(ownerKey({ kind: 'item', itemId: item.id })) ?? []} lang={lang} />
+                <FindingRow key={item.id} auditId={id} auditNo={view?.audit?.header.auditNo ?? ''} item={item} answer={answer} media={mediaByOwner.get(ownerKey({ kind: 'item', itemId: item.id })) ?? []} lang={lang} />
               ))}
             </ul>
           )}
         </section>
 
-        <PositiveList auditId={id} positives={positives ?? []} mediaByOwner={mediaByOwner} lang={lang} />
+        <PositiveList auditId={id} auditNo={view?.audit?.header.auditNo ?? ''} positives={positives ?? []} mediaByOwner={mediaByOwner} lang={lang} />
         </div>
       </main>
       <BottomNav auditId={id} />

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'preact/hooks';
 import type { Tag } from '../../db/db';
 import { repo } from '../../db/repo';
+import { PHOTO_COPIES_SETTING } from '../../media/photoCopy';
 import { checkForUpdates } from '../../pwa/updates';
 import { TagManager } from '../components/TagManager';
 import { toast } from '../components/toast';
@@ -34,6 +35,7 @@ function installed(): boolean {
 
 export function Settings() {
   const lang = useLiveQuery(() => repo.getSetting('dictationLang', 'en-US'), []);
+  const photoCopies = useLiveQuery(() => repo.getSetting(PHOTO_COPIES_SETTING, true), []);
   const tags = useLiveQuery<Tag[]>(() => repo.listTags(), []);
   const [storage, setStorage] = useState<StorageInfo | null>(null);
 
@@ -66,6 +68,23 @@ export function Settings() {
             </select>
           </div>
           <p class="muted small">Dictation uses the phone's speech service and usually needs mobile signal. Voice memos work without it.</p>
+        </section>
+
+        <section class="findings-section">
+          <h2>Photos</h2>
+          <label class="check-row">
+            <input
+              type="checkbox"
+              checked={photoCopies ?? true}
+              onChange={(e) => void repo.setSetting(PHOTO_COPIES_SETTING, (e.currentTarget as HTMLInputElement).checked)}
+            />
+            <span>Keep a copy of each photo in Downloads</span>
+          </label>
+          <p class="muted small">
+            Insurance against losing a draft: every photo added in the app is also saved to the phone. On Android it appears in the gallery under
+            “Download”; on iPhone it goes to Files › Downloads (use Share → Save Image on a photo for the Photos app). The browser may ask once to
+            allow multiple downloads.
+          </p>
         </section>
 
         <TagManager tags={tags ?? []} />

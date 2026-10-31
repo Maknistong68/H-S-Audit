@@ -8,7 +8,7 @@ import { MediaStrip } from './MediaStrip';
 import { NoteField, type NoteFieldHandle } from './NoteField';
 import { toast } from './toast';
 
-function PositiveRow({ auditId, positive, media, lang }: { auditId: string; positive: Positive; media: Media[]; lang: string }) {
+function PositiveRow({ auditId, auditNo, positive, media, lang }: { auditId: string; auditNo: string; positive: Positive; media: Media[]; lang: string }) {
   const [interim, setInterim] = useState('');
   const handle = useRef<NoteFieldHandle | null>(null);
   const owner = { kind: 'positive', positiveId: positive.id } as const;
@@ -28,6 +28,7 @@ function PositiveRow({ auditId, positive, media, lang }: { auditId: string; posi
       <div class="item-toolbar" role="toolbar" aria-label="Evidence tools">
         <ItemMediaTools
           auditId={auditId}
+          auditNo={auditNo}
           owner={owner}
           lang={lang}
           onInterim={setInterim}
@@ -48,12 +49,12 @@ function PositiveRow({ auditId, positive, media, lang }: { auditId: string; posi
           Remove
         </button>
       </div>
-      <MediaStrip media={media} />
+      <MediaStrip media={media} auditNo={auditNo} />
     </li>
   );
 }
 
-export function PositiveList({ auditId, positives, mediaByOwner, lang }: { auditId: string; positives: Positive[]; mediaByOwner: Map<string, Media[]>; lang: string }) {
+export function PositiveList({ auditId, auditNo, positives, mediaByOwner, lang }: { auditId: string; auditNo: string; positives: Positive[]; mediaByOwner: Map<string, Media[]>; lang: string }) {
   return (
     <section class="findings-section">
       <div class="section-head">
@@ -67,7 +68,7 @@ export function PositiveList({ auditId, positives, mediaByOwner, lang }: { audit
       ) : (
         <ul class="list">
           {positives.map((p) => (
-            <PositiveRow key={p.id} auditId={auditId} positive={p} media={mediaByOwner.get(ownerKey({ kind: 'positive', positiveId: p.id })) ?? []} lang={lang} />
+            <PositiveRow key={p.id} auditId={auditId} auditNo={auditNo} positive={p} media={mediaByOwner.get(ownerKey({ kind: 'positive', positiveId: p.id })) ?? []} lang={lang} />
           ))}
         </ul>
       )}

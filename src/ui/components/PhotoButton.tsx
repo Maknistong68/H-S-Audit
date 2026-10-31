@@ -2,12 +2,19 @@ import { useRef, useState } from 'preact/hooks';
 import type { MediaOwner } from '../../db/db';
 import { repo } from '../../db/repo';
 import { processPhoto, UnsupportedPhotoError } from '../../media/photo';
+import { PHOTO_COPIES_SETTING, photoCopyFilename } from '../../media/photoCopy';
+import { downloadBytes } from '../download';
+import { useLiveQuery } from '../hooks/useLiveQuery';
 import { toast } from './toast';
 
-/** Opens the phone's photo chooser (camera or gallery), shrinks each photo and stores it. */
-export function PhotoButton({ auditId, owner }: { auditId: string; owner: MediaOwner }) {
+/**
+ * Opens the phone's photo chooser (camera or gallery), shrinks each photo, stores it — and, unless turned off
+ * in Settings, also drops a copy into the phone's Downloads so a photo is never only inside the app.
+ */
+export function PhotoButton({ auditId, auditNo, owner }: { auditId: string; auditNo: string; owner: MediaOwner }) {
   const input = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
+  const copies = useLiveQuery(() => repo.getSetting(PHOTO_COPIES_SETTING, true), []) ?? true;
 
   async function onChange(e: Event) {
     const el = e.currentTarget as HTMLInputElement;
@@ -21,6 +28,7 @@ export function PhotoButton({ auditId, owner }: { auditId: string; owner: MediaO
         const p = await processPhoto(file);
         await repo.addMedia({ auditId, owner, type: 'photo', data: p.data, mime: p.mime, width: p.width, height: p.height, thumb: p.thumb });
         saved += 1;
+        if (copies) downloadBytes(new Uint8Array(p.data), photoCopyFilename(auditNo, owner, new Date()), 'image/jpeg');
       } catch (err) {
         toast(err instanceof UnsupportedPhotoError ? err.message : 'Could not save that photo — try again', { durationMs: 6000 });
       }

@@ -1,6 +1,8 @@
 import { useState } from 'preact/hooks';
 import type { Media } from '../../db/db';
 import { repo } from '../../db/repo';
+import { photoCopyFilename } from '../../media/photoCopy';
+import { saveOrShare } from '../download';
 import { useObjectUrl } from '../hooks/useObjectUrl';
 import { formatClock } from './MemoButton';
 import { Sheet } from './Sheet';
@@ -39,8 +41,14 @@ function remove(m: Media, what: string) {
   );
 }
 
+/** Share sheet (Save Image on iPhone, Teams/WhatsApp anywhere) or a plain download of the full-size photo. */
+async function share(m: Media, auditNo: string) {
+  const how = await saveOrShare(new Uint8Array(m.data), photoCopyFilename(auditNo, m.owner, new Date(m.createdAt)), 'image/jpeg');
+  if (how === 'downloaded') toast('Photo saved to Downloads');
+}
+
 /** Photos and memos attached to one item or positive observation. */
-export function MediaStrip({ media }: { media: Media[] }) {
+export function MediaStrip({ media, auditNo }: { media: Media[]; auditNo: string }) {
   const [open, setOpen] = useState<number | null>(null);
   const photos = media.filter((m) => m.type === 'photo');
   const audio = media.filter((m) => m.type === 'audio');
@@ -56,6 +64,9 @@ export function MediaStrip({ media }: { media: Media[] }) {
               <button type="button" class="thumb-remove" aria-label={`Remove photo ${i + 1}`} onClick={() => remove(m, 'Photo')}>
                 ×
               </button>
+              <button type="button" class="thumb-share" aria-label={`Share photo ${i + 1}`} onClick={() => void share(m, auditNo)}>
+                Share
+              </button>
             </li>
           ))}
         </ul>
@@ -65,6 +76,13 @@ export function MediaStrip({ media }: { media: Media[] }) {
       ))}
       <Sheet open={openPhoto !== undefined && openPhoto !== null} title={`Photo ${(open ?? 0) + 1} of ${photos.length}`} onClose={() => setOpen(null)}>
         {openPhoto && <FullPhoto media={openPhoto} index={(open ?? 0) + 1} />}
+        {openPhoto && (
+          <div class="actions-row">
+            <button type="button" class="btn" onClick={() => void share(openPhoto, auditNo)}>
+              Share / save to Photos
+            </button>
+          </div>
+        )}
       </Sheet>
     </div>
   );

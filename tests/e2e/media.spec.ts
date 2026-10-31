@@ -5,8 +5,11 @@ test('photo and memo attach to an item and survive reload', async ({ page }) => 
   await page.getByRole('button', { name: 'New audit' }).click();
   await page.getByRole('button', { name: 'Start walk' }).click();
   await page.getByRole('button', { name: /^B9\.1/ }).click();
-  await page.getByLabel('Add photo').setInputFiles('tests/fixtures/photo.jpg');
+  // Adding a photo also drops a copy into the phone's Downloads (gallery on Android)
+  const [copy] = await Promise.all([page.waitForEvent('download'), page.getByLabel('Add photo').setInputFiles('tests/fixtures/photo.jpg')]);
+  expect(copy.suggestedFilename()).toMatch(/^audit_B9-1_\d{8}-\d{6}\.jpg$/);
   await expect(page.getByRole('img', { name: 'Photo 1' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Share photo 1' })).toBeVisible();
   await page.getByRole('button', { name: 'Record memo' }).click();
   await page.waitForTimeout(1200);
   await page.getByRole('button', { name: 'Stop recording' }).click();

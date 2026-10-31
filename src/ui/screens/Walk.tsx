@@ -164,6 +164,7 @@ export function Walk({ id }: { id: string }) {
           expanded ? (
             <ItemMediaTools
               auditId={id}
+              auditNo={audit?.header.auditNo ?? ''}
               owner={owner}
               lang={lang}
               onInterim={setInterim}
@@ -174,7 +175,7 @@ export function Walk({ id }: { id: string }) {
             />
           ) : undefined
         }
-        mediaStrip={expanded ? <MediaStrip media={itemMedia} /> : undefined}
+        mediaStrip={expanded ? <MediaStrip media={itemMedia} auditNo={audit?.header.auditNo ?? ''} /> : undefined}
         interim={expanded ? interim : undefined}
         noteRef={
           expanded

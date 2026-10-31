@@ -6,6 +6,7 @@ import { PhotoButton } from './PhotoButton';
 /** The photo / memo / dictate controls for one owner (item or positive observation). */
 export function ItemMediaTools(props: {
   auditId: string;
+  auditNo: string;
   owner: MediaOwner;
   lang: string;
   onDictated(text: string): void;
@@ -13,7 +14,7 @@ export function ItemMediaTools(props: {
 }) {
   return (
     <>
-      <PhotoButton auditId={props.auditId} owner={props.owner} />
+      <PhotoButton auditId={props.auditId} auditNo={props.auditNo} owner={props.owner} />
       <MemoButton auditId={props.auditId} owner={props.owner} />
       <DictateButton lang={props.lang} onText={props.onDictated} onInterim={props.onInterim} />
     </>
