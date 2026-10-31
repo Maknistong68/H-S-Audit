@@ -1,0 +1,40 @@
+.export-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-bottom: var(--space-5);
+}
+
+.export-status {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.preflight {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.preflight-group h3 {
+  font-size: var(--text-md);
+  margin-bottom: var(--space-1);
+}
+
+.preflight-refs {
+  font-size: var(--text-sm);
+  color: var(--ink-muted);
+  max-height: 120px;
+  overflow: auto;
+}
+
+.snapshot-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  min-height: var(--tap-min);
+  padding: var(--space-1) 0;
+  border-bottom: 1px solid var(--border);
+}
