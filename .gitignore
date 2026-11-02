@@ -4,3 +4,7 @@ dev-dist
 test-results
 playwright-report
 .superpowers/
+
+# local server settings (see .env.example)
+.env.local
+.env*.local
