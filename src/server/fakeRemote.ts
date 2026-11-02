@@ -4,7 +4,7 @@ import type { Change, RemoteRow, SyncTable } from '../sync/types';
 import { canEdit } from '../sync/writer';
 import { RemoteError, type RemoteErrorKind } from './errors';
 import type { ChannelHandlers, PresenceState, Remote, RemoteAuth, Session } from './remote';
-import { rowKey } from './rows';
+import { fromBase64, rowKey, toBase64 } from './rows';
 
 /**
  * An in-memory server with the same rules as the real one (hs_apply, roles, topics), for unit and
@@ -48,6 +48,7 @@ interface Storage {
 
 export const FAKE_PASSWORD = 'test1234';
 export const FAKE_SESSION_KEY = 'hs:fakeSession';
+const FAKE_STATE_KEY = 'hs:fakeState';
 
 const seedUsers = (): FakeUser[] => [
   { id: 'user-admin', email: 'admin@test', password: FAKE_PASSWORD, fullName: 'Ada Admin', role: 'admin', confirmed: true },
@@ -89,6 +90,36 @@ export function createFake(opts: { storage?: Storage } = {}): { remote: Remote; 
   let clock = 0;
   let failNext: RemoteErrorKind | null = null;
   let session: FakeUser | null = null;
+
+  // With a storage, the whole server survives a page reload (a test's context keeps one fake "server").
+  const saved = opts.storage?.getItem(FAKE_STATE_KEY);
+  if (saved) {
+    try {
+      const state = JSON.parse(saved) as { users: FakeUser[]; tables: Record<SyncTable, RemoteRow[]>; invites: [string, { role: Role; createdAt: string }][]; files: Record<string, string>; clock: number };
+      users.splice(0, users.length, ...state.users);
+      for (const t of TABLES) for (const row of state.tables[t] ?? []) tables[t].set(rowKey(t, t === 'hs_answers' ? { audit_id: String(row.audit_id), item_id: String(row.item_id) } : { id: String(row.id) }), row);
+      for (const [email, inv] of state.invites) invites.set(email, inv);
+      for (const [path, b64] of Object.entries(state.files)) files.set(path, fromBase64(b64));
+      clock = state.clock;
+    } catch {
+      /* a stale or foreign value: start fresh */
+    }
+  }
+  function persist(): void {
+    if (!opts.storage) return;
+    const state = {
+      users,
+      tables: Object.fromEntries(TABLES.map((t) => [t, [...tables[t].values()]])),
+      invites: [...invites.entries()],
+      files: Object.fromEntries([...files.entries()].map(([path, data]) => [path, toBase64(data)])),
+      clock,
+    };
+    try {
+      opts.storage.setItem(FAKE_STATE_KEY, JSON.stringify(state));
+    } catch {
+      /* quota: the next change tries again */
+    }
+  }
 
   const stored = opts.storage?.getItem(FAKE_SESSION_KEY);
   if (stored) session = users.find((u) => u.email === stored) ?? null;
@@ -159,6 +190,7 @@ export function createFake(opts: { storage?: Storage } = {}): { remote: Remote; 
       broadcast(`audit:${auditId}`, change.table, row);
       if (change.table === 'hs_audits') broadcast('team:audits', change.table, row);
     }
+    persist();
     return { applied, skipped };
   }
 
@@ -180,6 +212,7 @@ export function createFake(opts: { storage?: Storage } = {}): { remote: Remote; 
     async uploadPhoto(path, data) {
       requireEditor();
       if (!files.has(path)) files.set(path, data.slice(0));
+      persist();
     },
     async downloadPhoto(path) {
       requireSession();
@@ -248,9 +281,11 @@ export function createFake(opts: { storage?: Storage } = {}): { remote: Remote; 
     },
     async updatePassword(password) {
       requireSession().password = password;
+      persist();
     },
     async updateName(fullName) {
       requireSession().fullName = fullName;
+      persist();
     },
     async me() {
       requireOnline();
@@ -260,8 +295,12 @@ export function createFake(opts: { storage?: Storage } = {}): { remote: Remote; 
       const admin = requireAdmin();
       const normalised = email.trim().toLowerCase();
       invites.set(normalised, { role, createdAt: new Date(BASE_CLOCK + ++clock).toISOString() });
-      if (users.some((u) => u.email === normalised)) return 'exists';
+      if (users.some((u) => u.email === normalised)) {
+        persist();
+        return 'exists';
+      }
       users.push({ id: `user-${users.length + 1}-${admin.id}`, email: normalised, password: null, fullName: null, role, confirmed: false });
+      persist();
       return 'invited';
     },
     async setRole(userId, role) {
@@ -269,6 +308,7 @@ export function createFake(opts: { storage?: Storage } = {}): { remote: Remote; 
       const u = users.find((x) => x.id === userId);
       if (!u) throw new RemoteError('validation', 'no such member');
       u.role = role;
+      persist();
     },
     async listInvites() {
       requireAdmin();
@@ -296,6 +336,7 @@ export function createFake(opts: { storage?: Storage } = {}): { remote: Remote; 
     },
     putPhoto: (path, data) => {
       files.set(path, data.slice(0));
+      persist();
     },
     userId: (email) => findUser(email)?.id ?? '',
     acceptInvite: (email, password, fullName) => {
@@ -305,6 +346,7 @@ export function createFake(opts: { storage?: Storage } = {}): { remote: Remote; 
       u.fullName = fullName;
       u.confirmed = true;
       u.role = invites.get(u.email)?.role ?? u.role;
+      persist();
     },
     resets: () => [...resets],
     presence: (who, topic, itemId) => {

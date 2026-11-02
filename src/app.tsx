@@ -12,6 +12,7 @@ import { Reset } from './ui/screens/Reset';
 import { Score } from './ui/screens/Score';
 import { Settings } from './ui/screens/Settings';
 import { SignIn } from './ui/screens/SignIn';
+import { Team } from './ui/screens/Team';
 import { Walk } from './ui/screens/Walk';
 import { Welcome } from './ui/screens/Welcome';
 
@@ -44,6 +45,7 @@ export function App() {
             <Route path={routes.score} component={Score} />
             <Route path={routes.export} component={Export} />
             <Route path={routes.settings} component={Settings} />
+            <Route path={routes.team} component={Team} />
             <Route default component={NotFound} />
           </Router>
         </AuthGate>

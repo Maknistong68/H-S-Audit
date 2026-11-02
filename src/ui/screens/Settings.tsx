@@ -1,8 +1,9 @@
 import { useLocation } from 'preact-iso';
 import { useEffect, useState } from 'preact/hooks';
-import { sessionStore } from '../../auth/session';
+import { refreshSession, sessionStore } from '../../auth/session';
 import { repo } from '../../db/repo';
 import { server } from '../../server';
+import { isAdmin } from '../../sync/writer';
 import { useStore } from '../hooks/useStore';
 import { PHOTO_COPIES_SETTING } from '../../media/photoCopy';
 import { checkForUpdates } from '../../pwa/updates';
@@ -46,7 +47,19 @@ export function Settings() {
   const { route } = useLocation();
   const session = useStore(sessionStore);
   const me = session.status === 'ready' ? session.me : null;
+  const [name, setName] = useState<string | null>(null);
   const lang = useLiveQuery(() => repo.getSetting('dictationLang', 'en-US'), []);
+
+  async function saveName() {
+    if (name === null || !me || name.trim() === (me.fullName ?? '')) return;
+    try {
+      await server().auth.updateName(name.trim());
+      await refreshSession();
+      toast('Name saved');
+    } catch (err) {
+      toast(err instanceof Error ? err.message : 'Could not save your name', { durationMs: 6000 });
+    }
+  }
   const photoCopies = useLiveQuery(() => repo.getSetting(PHOTO_COPIES_SETTING, true), []);
   const [storage, setStorage] = useState<StorageInfo | null>(null);
 
@@ -73,16 +86,34 @@ export function Settings() {
           </div>
           <div class="panel-body">
             {me && (
-              <p class="kv">
-                <span>
-                  <b>Name</b> {me.fullName || 'Not set'}
-                </span>
-                <span>
-                  <b>Email</b> {me.email}
-                </span>
-              </p>
+              <>
+                <div class="field">
+                  <label for="account-name">Your name</label>
+                  <input
+                    id="account-name"
+                    type="text"
+                    autocomplete="name"
+                    value={name ?? me.fullName ?? ''}
+                    onInput={(e) => setName((e.currentTarget as HTMLInputElement).value)}
+                    onBlur={() => void saveName()}
+                  />
+                </div>
+                <p class="kv">
+                  <span>
+                    <b>Email</b> {me.email}
+                  </span>
+                  <span>
+                    <b>Role</b> {ROLE_LABEL[me.role ?? 'viewer']}
+                  </span>
+                </p>
+              </>
             )}
             <div class="actions-row" style={{ marginTop: '12px' }}>
+              {me && isAdmin(me.role) && (
+                <a href={paths.team()} class="btn btn-sm btn-primary">
+                  Manage team
+                </a>
+              )}
               <button
                 type="button"
                 class="btn btn-sm"
@@ -96,6 +127,7 @@ export function Settings() {
               </button>
             </div>
           </div>
+          <p class="panel-note">Your name is shown to teammates next to what you edit.</p>
         </section>
 
         <section class="panel">
@@ -173,7 +205,7 @@ export function Settings() {
               </div>
             )}
           </div>
-          <p class="panel-note">Audits live only on this device. Export a backup before changing phones or clearing browser data.</p>
+          <p class="panel-note">Audits are shared with the team and kept on this device for offline use. Persistent storage stops the browser from clearing them.</p>
         </section>
 
         <section class="panel">
