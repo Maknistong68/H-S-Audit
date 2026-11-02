@@ -12,6 +12,8 @@ export default defineConfig({
   base,
   define: {
     'import.meta.env.VITE_APP_VERSION': JSON.stringify(pkg.version),
+    // A build-time constant, so the in-memory fake server (and its users) is tree-shaken out of real builds.
+    __HS_FAKE__: JSON.stringify(process.env.VITE_FAKE_REMOTE === '1'),
   },
   build: {
     chunkSizeWarningLimit: 1200,
