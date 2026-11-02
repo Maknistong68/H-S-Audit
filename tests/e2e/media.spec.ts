@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './fixtures';
 
 test('photo attaches to an item and survives reload', async ({ page }) => {
   await page.goto('./');

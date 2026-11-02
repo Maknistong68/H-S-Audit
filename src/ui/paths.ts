@@ -9,6 +9,10 @@ export const routes = {
   score: `${BASE}/audit/:id/score`,
   export: `${BASE}/audit/:id/export`,
   settings: `${BASE}/settings`,
+  signIn: `${BASE}/sign-in`,
+  welcome: `${BASE}/welcome`,
+  reset: `${BASE}/reset`,
+  team: `${BASE}/team`,
 };
 
 export const paths = {
@@ -19,4 +23,8 @@ export const paths = {
   score: (id: string) => `${BASE}/audit/${id}/score`,
   export: (id: string) => `${BASE}/audit/${id}/export`,
   settings: () => `${BASE}/settings`,
+  signIn: () => `${BASE}/sign-in`,
+  welcome: () => `${BASE}/welcome`,
+  reset: () => `${BASE}/reset`,
+  team: () => `${BASE}/team`,
 };

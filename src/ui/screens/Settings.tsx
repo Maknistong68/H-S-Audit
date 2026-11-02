@@ -1,5 +1,9 @@
+import { useLocation } from 'preact-iso';
 import { useEffect, useState } from 'preact/hooks';
+import { sessionStore } from '../../auth/session';
 import { repo } from '../../db/repo';
+import { server } from '../../server';
+import { useStore } from '../hooks/useStore';
 import { PHOTO_COPIES_SETTING } from '../../media/photoCopy';
 import { checkForUpdates } from '../../pwa/updates';
 import { toast } from '../components/toast';
@@ -36,7 +40,12 @@ function installed(): boolean {
   return window.matchMedia('(display-mode: standalone)').matches || (navigator as { standalone?: boolean }).standalone === true;
 }
 
+const ROLE_LABEL = { viewer: 'Viewer (read-only)', auditor: 'Auditor', lead: 'Lead', admin: 'Admin' } as const;
+
 export function Settings() {
+  const { route } = useLocation();
+  const session = useStore(sessionStore);
+  const me = session.status === 'ready' ? session.me : null;
   const lang = useLiveQuery(() => repo.getSetting('dictationLang', 'en-US'), []);
   const photoCopies = useLiveQuery(() => repo.getSetting(PHOTO_COPIES_SETTING, true), []);
   const [storage, setStorage] = useState<StorageInfo | null>(null);
@@ -57,6 +66,38 @@ export function Settings() {
     <>
       <TopBar title="Settings" back={paths.home()} />
       <main class="screen">
+        <section class="panel">
+          <div class="panel-head">
+            <h2>Account</h2>
+            {me && <span class="status-text">{ROLE_LABEL[me.role ?? 'viewer']}</span>}
+          </div>
+          <div class="panel-body">
+            {me && (
+              <p class="kv">
+                <span>
+                  <b>Name</b> {me.fullName || 'Not set'}
+                </span>
+                <span>
+                  <b>Email</b> {me.email}
+                </span>
+              </p>
+            )}
+            <div class="actions-row" style={{ marginTop: '12px' }}>
+              <button
+                type="button"
+                class="btn btn-sm"
+                onClick={() =>
+                  void server()
+                    .auth.signOut()
+                    .then(() => route(paths.signIn(), true))
+                }
+              >
+                Sign out
+              </button>
+            </div>
+          </div>
+        </section>
+
         <section class="panel">
           <div class="panel-head">
             <h2>Dictation</h2>

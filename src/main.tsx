@@ -7,7 +7,11 @@ import './styles/media.css';
 import './styles/findings.css';
 import './styles/export.css';
 import './styles/desk.css';
+import './styles/auth.css';
+import { startSession } from './auth/session';
 import { installFlushListeners } from './db/flush';
+import { loadServer } from './server';
+import { startEngine } from './sync/engine';
 import { registerUpdates } from './pwa/updates';
 import { toast } from './ui/components/toast';
 import { App } from './app';
@@ -15,4 +19,9 @@ import { App } from './app';
 installFlushListeners(window);
 registerUpdates((apply) => toast('A new version is ready', { action: { label: 'Reload', onClick: apply }, durationMs: 0 }));
 
-render(<App />, document.getElementById('app')!);
+void (async () => {
+  const { remote, auth } = await loadServer();
+  startEngine({ remote, auth, win: window });
+  await startSession(auth);
+  render(<App />, document.getElementById('app')!);
+})();

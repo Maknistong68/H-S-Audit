@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './fixtures';
 
 test('create audit, fill header, survives reload, archive and purge gate', async ({ page }) => {
   await page.goto('./');

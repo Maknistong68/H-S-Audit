@@ -75,7 +75,7 @@ export function startEngine(deps: { remote: Remote; auth: RemoteAuth; win: Windo
       pushAgain = true;
       return;
     }
-    if (!online()) {
+    if (!online() || !(await auth.session())) {
       syncStatus.set({ kind: 'offline', pending: await pending() });
       return;
     }
@@ -109,6 +109,10 @@ export function startEngine(deps: { remote: Remote; auth: RemoteAuth; win: Windo
     if (!online() || stopped) return Promise.resolve();
     pulling = (async () => {
       try {
+        if (!(await auth.session())) {
+          syncStatus.set({ kind: 'offline', pending: await pending() });
+          return;
+        }
         syncStatus.set({ kind: 'syncing', pending: await pending() });
         await pullOnce(remote);
         await checkDeleted();
@@ -196,7 +200,8 @@ export function startEngine(deps: { remote: Remote; auth: RemoteAuth; win: Windo
   win.document.addEventListener('visibilitychange', onVisible);
   const offWrite = onWrite(requestPush);
   const offAuth = auth.onChange((session) => {
-    if (session) onOnline();
+    // Deferred: supabase-js must not be called from inside its own auth callback.
+    if (session) setTimeout(onOnline, 0);
   });
   const interval = setInterval(() => {
     if (win.document.visibilityState === 'visible') void pullNow();

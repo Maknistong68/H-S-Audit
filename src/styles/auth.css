@@ -1,0 +1,54 @@
+/* Sign in, welcome, reset and "not in the team" screens: one centred panel on the canvas. */
+.auth-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding-top: max(12vh, var(--space-6));
+  min-height: 100dvh;
+}
+
+.auth-title {
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+  font-weight: 600;
+  color: var(--accent);
+  margin: 0 0 var(--space-1);
+  letter-spacing: 0.01em;
+}
+
+.auth-subtitle {
+  color: var(--ink-2);
+  font-size: var(--text-sm);
+  margin: 0 0 var(--space-5);
+  text-align: center;
+}
+
+.auth-panel {
+  width: min(100%, 420px);
+}
+
+.auth-panel .panel-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.auth-panel .btn-block + .btn-block {
+  margin-top: 0;
+}
+
+.auth-error {
+  color: var(--danger);
+  font-size: var(--text-sm);
+  margin: 0;
+}
+
+.auth-note {
+  background: var(--warn-bg);
+  color: var(--warn-ink);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--text-sm);
+  margin: 0;
+}

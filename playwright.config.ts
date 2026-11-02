@@ -19,7 +19,7 @@ export default defineConfig({
   },
   projects: [{ name: 'mobile', use: { ...devices['Pixel 7'] } }],
   webServer: {
-    command: 'npm run build && npm run preview',
+    command: 'VITE_FAKE_REMOTE=1 npm run build && npm run preview',
     url: `http://localhost:4173${base}`,
     reuseExistingServer: !process.env.CI,
     timeout: 180_000,

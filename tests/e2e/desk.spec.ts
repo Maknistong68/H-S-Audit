@@ -1,4 +1,5 @@
-import { test, expect, devices } from '@playwright/test';
+import { devices } from '@playwright/test';
+import { test, expect } from './fixtures';
 
 // A desktop browser (the cloud PC): Playwright requires the device override at file level.
 test.use({ ...devices['Desktop Chrome'], viewport: { width: 1200, height: 800 } });

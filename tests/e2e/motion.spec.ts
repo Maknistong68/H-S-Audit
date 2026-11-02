@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './fixtures';
 
 test('sheets close on Escape at once and motion is removed when the phone asks for reduced motion', async ({ page }) => {
   await page.goto('./');
