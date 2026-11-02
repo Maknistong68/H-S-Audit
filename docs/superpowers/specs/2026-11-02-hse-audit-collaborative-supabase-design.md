@@ -238,8 +238,10 @@ immutable; removal is the row's `deleted_at`).
 4. If Auth answers that the user already exists, respond `{ status: 'exists' }`
    so the Team screen can offer "Send sign-in link" instead (see 5.8).
 
-Settings the function reads: `HS_APP_URL` (the app's origin, e.g.
-`https://hse-audit-nine.vercel.app`) plus the Supabase-provided URL and keys.
+The redirect origin is the request's `Origin` header when it is in the
+function's allow list (`https://hse-audit-nine.vercel.app`,
+`http://localhost:5173`, `http://localhost:4173`), else the first entry; the
+function needs no secret of its own beyond the Supabase-provided URL and keys.
 
 ### 3.9 Manual configuration (cannot be done from this repo)
 
@@ -459,7 +461,7 @@ audit was last exported.
 - `supabase/migrations/2026110201_hs_tables.sql`, `…02_hs_apply.sql`,
   `…03_hs_realtime.sql`, `…04_hs_storage.sql`, `…05_hs_directory.sql`,
   applied to the Audit Dashboard project; `supabase/functions/invite-user/`
-  deployed to it with secret `HS_APP_URL`.
+  deployed to it.
 - Vercel env (all targets): `VITE_SUPABASE_URL`,
   `VITE_SUPABASE_PUBLISHABLE_KEY` (the `sb_publishable_…` key). `.env.example`
   documents them; `npm run dev` reads `.env.local`.
