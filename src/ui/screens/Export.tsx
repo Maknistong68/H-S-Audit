@@ -14,6 +14,7 @@ import { toast } from '../components/toast';
 import { TopBar } from '../components/TopBar';
 import { saveOrShare } from '../download';
 import { useAudit } from '../hooks/useAudit';
+import { useAuditChannel } from '../hooks/useAuditChannel';
 import { useLiveQuery } from '../hooks/useLiveQuery';
 import { paths } from '../paths';
 
@@ -22,6 +23,7 @@ type Kind = 'excel' | 'backup';
 
 export function Export({ id }: { id: string }) {
   const view = useAudit(id);
+  const { deletedBy } = useAuditChannel(id);
   const snapshots = useLiveQuery<Snapshot[]>(() => listSnapshots(id), [id]);
   const [pending, setPending] = useState<{ kind: Kind; issues: PreflightIssue[] } | null>(null);
   const [busy, setBusy] = useState<Kind | null>(null);
@@ -39,9 +41,12 @@ export function Export({ id }: { id: string }) {
         toast(how === 'shared' ? 'Excel shared' : `Saved ${filename}`);
         if (missingPhotos > 0) toast(`${missingPhotos} photo${missingPhotos === 1 ? ' was' : 's were'} not available offline; thumbnails were used`, { durationMs: 8000 });
       } else {
-        const { bytes, filename } = await buildBackup(id);
+        const { server } = await import('../../server');
+        const { bytes, filename, missingPhotos } = await buildBackup(id, { remote: server().remote, onProgress: (done, total) => setProgress({ done, total }) });
+        setProgress(null);
         const how = await saveOrShare(bytes, filename, 'application/zip');
         toast(how === 'shared' ? 'Backup shared' : `Saved ${filename}`);
+        if (missingPhotos > 0) toast(`${missingPhotos} photo${missingPhotos === 1 ? ' was' : 's were'} not available offline; thumbnails were used`, { durationMs: 8000 });
       }
     } catch (err) {
       toast(err instanceof Error ? err.message : 'Export failed — try again', { durationMs: 8000 });
@@ -71,6 +76,19 @@ export function Export({ id }: { id: string }) {
     );
   }
 
+  if (view?.audit?.deletedAt !== undefined || deletedBy) {
+    return (
+      <>
+        <TopBar title="Export" back={paths.home()} />
+        <main class="screen">
+          <p class="empty" role="alert">
+            This audit was deleted by {deletedBy ?? 'a teammate'}. Nothing you entered is lost; an admin can restore it. <a href={paths.home()}>Back to audits</a>
+          </p>
+        </main>
+      </>
+    );
+  }
+
   return (
     <>
       <TopBar title="Export" back={paths.home()} subtitle={audit?.header.auditNo || 'Untitled audit'} />
@@ -93,7 +111,7 @@ export function Export({ id }: { id: string }) {
               <p class="muted small">The Book2-layout workbook with photos, built on this phone. Share it to Teams or email, or save it.</p>
               <button type="button" class="btn btn-block" disabled={busy !== null} onClick={() => request('backup')}>
                 <Icon name="archive" size={18} />
-                {busy === 'backup' ? 'Building backup…' : 'Export backup'}
+                {busy === 'backup' ? (progress && progress.done < progress.total ? `Downloading ${progress.total - progress.done} photo${progress.total - progress.done === 1 ? '' : 's'}…` : 'Building backup…') : 'Export backup'}
               </button>
               <p class="muted small">A zip with everything, including voice memos. Import backup on another phone or on the PC re-opens it.</p>
             </div>

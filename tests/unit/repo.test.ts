@@ -81,7 +81,7 @@ test('archive hides; delete for the team is gated by the typed audit number and 
   await repo.deleteAudit(a.id, 'HSSEW-004');
   expect((await repo.getAudit(a.id))!.deletedAt).toBeGreaterThan(0);
   expect(await db.answers.count()).toBe(1); // soft: nothing of the team's is destroyed
-  expect(await db.mediaBlobs.get(m.id)).toBeUndefined(); // only this phone's copy of the bytes goes
+  expect(await db.mediaBlobs.get(m.id)).toBeDefined(); // still waiting to upload, so the bytes stay (uploaded ones are freed; see below)
   expect((await db.outbox.toArray()).at(-1)!.change.fields).toMatchObject({ deleted_at: expect.any(Number) });
 });
 
@@ -171,3 +171,15 @@ test('settings', async () => {
   await repo.setSetting('lang', 'ar-SA');
   expect(await repo.getSetting('lang', 'en-US')).toBe('ar-SA');
 });
+
+test('delete for the team keeps the bytes of photos that have not been uploaded yet', async () => {
+  const a = await repo.createAudit({ auditNo: 'HSSEW-070' });
+  const pending = await repo.addMedia({ auditId: a.id, owner: { kind: 'item', itemId: 'A1' }, type: 'photo', data: new Uint8Array([1]).buffer, mime: 'image/jpeg' });
+  const uploaded = await repo.addMedia({ auditId: a.id, owner: { kind: 'item', itemId: 'A2' }, type: 'photo', data: new Uint8Array([2]).buffer, mime: 'image/jpeg' });
+  await db.media.update(uploaded.id, { uploadedAt: 5 });
+  await db.outbox.where('key').equals(`hs_photos:${uploaded.id}`).delete(); // its upload already happened
+  await repo.deleteAudit(a.id, 'HSSEW-070');
+  expect(await db.mediaBlobs.get(pending.id)).toBeDefined(); // still queued: the team must still get it
+  expect(await db.mediaBlobs.get(uploaded.id)).toBeUndefined(); // on the server already: free the space
+});
+

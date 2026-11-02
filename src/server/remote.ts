@@ -21,8 +21,11 @@ export interface ChannelHandlers {
 /** Everything the phone asks of the server; one implementation over Supabase, one in memory for tests. */
 export interface Remote {
   apply(changes: Change[]): Promise<{ applied: number; skipped: number }>;
-  /** Rows of `table` changed after `sinceServerAt` (an ISO timestamp, or null for everything), ascending. */
-  pull(table: SyncTable, sinceServerAt: string | null, limit: number): Promise<RemoteRow[]>;
+  /**
+   * Rows of `table` changed after `sinceServerAt` (an ISO timestamp, or null for everything), ascending by
+   * server_at. With `inclusive`, rows stamped exactly `sinceServerAt` are included too (page boundaries).
+   */
+  pull(table: SyncTable, sinceServerAt: string | null, limit: number, opts?: { inclusive?: boolean }): Promise<RemoteRow[]>;
   /** A duplicate upload (the file is already there) counts as success. */
   uploadPhoto(path: string, data: ArrayBuffer): Promise<void>;
   downloadPhoto(path: string): Promise<ArrayBuffer>;

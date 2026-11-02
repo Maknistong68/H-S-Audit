@@ -76,6 +76,8 @@ const TABLES = Object.keys(ALLOWED_FIELDS) as SyncTable[];
 const clone = <T>(v: T): T => JSON.parse(JSON.stringify(v)) as T;
 
 const BASE_CLOCK = Date.UTC(2026, 10, 2, 10, 0, 0);
+/** A phone clock more than this far ahead of the server is clamped to server time (same as hs_apply). */
+export const CLOCK_GRACE_MS = 60_000;
 
 export function createFake(opts: { storage?: Storage } = {}): { remote: Remote; auth: RemoteAuth; control: FakeControl } {
   const users = seedUsers();
@@ -159,17 +161,24 @@ export function createFake(opts: { storage?: Storage } = {}): { remote: Remote; 
     for (const sub of subs.get(topic) ?? []) sub.handlers.onPresence?.(others(topic, sub.presence?.userId ?? session?.id));
   }
 
-  /** hs_apply: validate, merge per field, stamp server_at, broadcast. */
+  /** hs_apply: validate, clamp a fast clock, merge per field, stamp server_at (one per call), broadcast. */
   function applyAs(userId: string, changes: Change[]): { applied: number; skipped: number } {
     let applied = 0;
     let skipped = 0;
     for (const change of changes) {
       if (!TABLES.includes(change.table)) throw new RemoteError('validation', `unknown table ${String(change.table)}`);
+      const keyColumns = change.table === 'hs_answers' ? ['audit_id', 'item_id'] : ['id'];
+      for (const k of Object.keys(change.key)) {
+        if (!keyColumns.includes(k)) throw new RemoteError('validation', `key column ${k} is not allowed on ${change.table}`);
+      }
       for (const f of Object.keys(change.fields)) {
         if (!ALLOWED_FIELDS[change.table].includes(f)) throw new RemoteError('validation', `field ${f} is not allowed on ${change.table}`);
       }
     }
-    for (const change of changes) {
+    const stamp = serverAt(); // one transaction, one server_at, exactly like now() on the server
+    const ceiling = Date.now() + CLOCK_GRACE_MS;
+    for (const raw of changes) {
+      const change = raw.at > ceiling ? { ...raw, at: Date.now() } : raw;
       const key = rowKey(change.table, change.key);
       const existing = tables[change.table].get(key);
       const result = applyChange(existing, change, userId);
@@ -177,10 +186,10 @@ export function createFake(opts: { storage?: Storage } = {}): { remote: Remote; 
       skipped += result.skipped.length;
       if (!existing) {
         if (change.table !== 'hs_answers') result.row.created_by = userId;
-        result.row.server_at = serverAt();
+        result.row.server_at = stamp;
         tables[change.table].set(key, result.row);
       } else if (result.applied.length > 0) {
-        result.row.server_at = serverAt();
+        result.row.server_at = stamp;
         tables[change.table].set(key, result.row);
       } else {
         continue;
@@ -204,9 +213,10 @@ export function createFake(opts: { storage?: Storage } = {}): { remote: Remote; 
       }
       return applyAs(u.id, changes);
     },
-    async pull(table, since, limit) {
+    async pull(table, since, limit, opts) {
       requireSession();
-      const rows = [...tables[table].values()].filter((r) => since === null || (r.server_at ?? '') > since).sort((a, b) => (a.server_at! < b.server_at! ? -1 : 1));
+      const after = (r: RemoteRow) => (since === null ? true : opts?.inclusive ? (r.server_at ?? '') >= since : (r.server_at ?? '') > since);
+      const rows = [...tables[table].values()].filter(after).sort((a, b) => (a.server_at! < b.server_at! ? -1 : a.server_at! > b.server_at! ? 1 : 0));
       return clone(rows.slice(0, limit));
     },
     async uploadPhoto(path, data) {

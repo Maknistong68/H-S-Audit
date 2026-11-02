@@ -51,3 +51,19 @@ test('pull refreshes members and contractors', async () => {
 test('cursorFrom subtracts 60 seconds', () => {
   expect(cursorFrom('2026-11-02T10:01:00.000Z')).toBe('2026-11-02T10:00:00.000Z');
 });
+
+test('rows that share a server_at across a page boundary are all pulled', async () => {
+  const { remote, auth, control } = createFake();
+  await auth.signIn('auditor@test', 'test1234');
+  control.teammate('lead', [auditCreate('a', 10)]);
+  // one batch: every answer gets the same server_at, as one hs_apply transaction does on the server
+  control.teammate(
+    'lead',
+    ['A1', 'A2', 'A3', 'A4', 'A5', 'A6', 'A7'].map((item) => ({ table: 'hs_answers' as const, key: { audit_id: 'a', item_id: item }, fields: { result: 'full' }, at: 20 })),
+  );
+  const stamps = new Set(control.rows('hs_answers').map((r) => r.server_at));
+  expect(stamps.size).toBe(1);
+  expect(await pullOnce(remote, { page: 3 })).toBeGreaterThanOrEqual(8);
+  expect((await repo.getAnswers('a')).map((x) => x.itemId).sort()).toEqual(['A1', 'A2', 'A3', 'A4', 'A5', 'A6', 'A7']);
+});
+

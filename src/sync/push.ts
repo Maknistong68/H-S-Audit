@@ -27,10 +27,14 @@ function batches(entries: OutboxEntry[]): OutboxEntry[][] {
   return out;
 }
 
-async function sendPhoto(remote: Remote, entry: OutboxEntry): Promise<void> {
+/** Returns false when the photo can never be sent (its bytes are gone), so the caller drops the entry. */
+async function sendPhoto(remote: Remote, entry: OutboxEntry): Promise<boolean> {
   const id = entry.change.key.id;
   const blob = await db.mediaBlobs.get(id);
-  if (!blob) throw new RemoteError('validation', 'photo bytes are no longer on this device');
+  if (!blob) {
+    console.warn(`photo ${id}: bytes are no longer on this device; the upload is dropped`);
+    return false;
+  }
   await remote.uploadPhoto(String(entry.change.fields.storage_path), blob.data);
   const uploadedAt = Date.now();
   const change: Change = { ...entry.change, fields: { ...entry.change.fields, uploaded_at: uploadedAt } };
@@ -42,6 +46,7 @@ async function sendPhoto(remote: Remote, entry: OutboxEntry): Promise<void> {
       m.uploadedAt = uploadedAt;
       m.fieldAt = { ...(m.fieldAt ?? {}), uploaded_at: entry.change.at };
     });
+  return true;
 }
 
 /**
@@ -56,8 +61,13 @@ export async function pushOnce(remote: Remote, opts: { batch?: number } = {}): P
   for (const batch of batches(entries)) {
     const seqs = batch.map((e) => e.seq!);
     try {
-      if (batch[0].kind === 'photo') await sendPhoto(remote, batch[0]);
-      else await remote.apply(batch.map((e) => e.change));
+      if (batch[0].kind === 'photo') {
+        const ok = await sendPhoto(remote, batch[0]);
+        await removeEntries(seqs);
+        if (ok) sent += batch.length;
+        continue;
+      }
+      await remote.apply(batch.map((e) => e.change));
       await removeEntries(seqs);
       sent += batch.length;
     } catch (err) {

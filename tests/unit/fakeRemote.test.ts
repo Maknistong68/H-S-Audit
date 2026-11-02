@@ -119,3 +119,33 @@ test('a pre-signed fake session is read from localStorage', async () => {
   expect(await auth.session()).toMatchObject({ email: 'lead@test' });
   expect((await auth.me())!.role).toBe('lead');
 });
+
+test('a change stamped far in the future is clamped to server time, like hs_apply', async () => {
+  const { remote, auth, control } = createFake();
+  await auth.signIn('auditor@test', 'test1234');
+  const future = Date.now() + 365 * 24 * 3600 * 1000;
+  await remote.apply([auditCreate('a', future)]);
+  const row = control.rows('hs_audits')[0];
+  expect(row.updated_at).toBeLessThan(Date.now() + 120_000);
+  expect(row.field_at.audit_no).toBeLessThan(Date.now() + 120_000);
+  // a teammate's ordinary change afterwards still wins
+  await remote.apply([{ table: 'hs_audits', key: { id: 'a' }, fields: { audit_no: 'LATER' }, at: Date.now() + 1000 }]);
+  expect(control.rows('hs_audits')[0].audit_no).toBe('LATER');
+});
+
+test('a key with extra columns is refused', async () => {
+  const { remote, auth } = createFake();
+  await auth.signIn('auditor@test', 'test1234');
+  await expect(remote.apply([{ table: 'hs_audits', key: { id: 'a', created_by: 'x' }, fields: { audit_no: 'X', status: 'draft', template_version: 't', created_at: 1 }, at: 5 }])).rejects.toMatchObject({ kind: 'validation' });
+});
+
+test('every row of one apply call shares a server_at, and pull with inclusive=true returns the boundary row', async () => {
+  const { remote, auth } = createFake();
+  await auth.signIn('auditor@test', 'test1234');
+  await remote.apply([auditCreate('a', 10), auditCreate('b', 10)]);
+  const rows = await remote.pull('hs_audits', null, 10);
+  expect(rows[0].server_at).toBe(rows[1].server_at);
+  expect(await remote.pull('hs_audits', rows[0].server_at!, 10)).toEqual([]);
+  expect(await remote.pull('hs_audits', rows[0].server_at!, 10, { inclusive: true })).toHaveLength(2);
+});
+

@@ -70,3 +70,18 @@ test('deleted by a teammate while open', async ({ page }) => {
   await expect(page.getByRole('button', { name: 'New audit' })).toBeVisible();
   await expect(page.getByText('HSSEW-011')).toBeHidden();
 });
+
+test('deleted by a teammate while Findings is open', async ({ page }) => {
+  const id = await createAudit(page, 'HSSEW-012');
+  await page.getByRole('button', { name: 'Start walk' }).click();
+  await page.getByRole('link', { name: 'Findings' }).click();
+  await expect(page.getByRole('heading', { name: /Negative observations/ })).toBeVisible();
+  await page.evaluate(
+    ({ id, at }) => (window as unknown as { __hsFake: Fake }).__hsFake.teammate('lead', [{ table: 'hs_audits', key: { id }, fields: { deleted_at: at }, at }]),
+    { id, at: Date.now() + 1000 },
+  );
+  await expect(page.getByText('This audit was deleted by Lee Lead')).toBeVisible({ timeout: 5_000 });
+  await page.getByRole('link', { name: 'Back to audits' }).click();
+  await expect(page.getByRole('button', { name: 'New audit' })).toBeVisible();
+});
+

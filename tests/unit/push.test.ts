@@ -106,3 +106,16 @@ test('backoffMs doubles from 2 s and caps at 60 s', () => {
   expect(backoffMs(3)).toBe(16000);
   expect(backoffMs(10)).toBe(60000);
 });
+
+test('a photo whose bytes are gone is dropped from the queue instead of failing forever', async () => {
+  const { remote } = await fakeSignedIn();
+  const a = await repo.createAudit();
+  const m = await repo.addMedia({ auditId: a.id, owner: { kind: 'item', itemId: 'A1' }, type: 'photo', data: new Uint8Array([1]).buffer, mime: 'image/jpeg' });
+  await db.mediaBlobs.delete(m.id);
+  const result = await pushOnce(remote);
+  expect(result.left).toBe(0);
+  expect(result.failed).toBeUndefined();
+  expect(await db.outbox.count()).toBe(0);
+  expect(await pushOnce(remote)).toEqual({ sent: 0, left: 0, failed: undefined });
+});
+

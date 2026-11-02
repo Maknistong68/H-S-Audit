@@ -9,26 +9,48 @@ export const sessionStore = createStore<SessionState>({ status: 'loading' });
 
 const ME_KEY = 'auth:me';
 
-async function resolve(auth: RemoteAuth, session: Session | null): Promise<SessionState> {
-  if (!session) {
-    setWriter(null);
-    return { status: 'signed-out' };
-  }
-  let me: Member | null = null;
-  try {
-    me = await auth.me();
-    if (me) await db.settings.put({ key: ME_KEY, value: me });
-  } catch {
-    // Offline: the profile cached at the last sign-in is enough to open the app and work.
-    const cached = (await db.settings.get(ME_KEY))?.value as Member | undefined;
-    if (cached && cached.id === session.userId) me = cached;
-  }
+async function cachedProfile(session: Session): Promise<Member | null> {
+  const cached = (await db.settings.get(ME_KEY))?.value as Member | undefined;
+  return cached && cached.id === session.userId ? cached : null;
+}
+
+function stateFor(session: Session, me: Member | null): SessionState {
   if (!me || !me.role || !me.confirmed) {
     setWriter(null);
     return { status: 'no-role', email: session.email };
   }
   setWriter({ id: me.id, role: me.role });
   return { status: 'ready', me };
+}
+
+/** The fresh profile from the server; on failure (offline, slow link) the cached one. */
+async function freshOrCached(auth: RemoteAuth, session: Session): Promise<Member | null> {
+  try {
+    const me = await auth.me();
+    if (me) await db.settings.put({ key: ME_KEY, value: me });
+    return me;
+  } catch {
+    return cachedProfile(session);
+  }
+}
+
+/**
+ * Resolves a session into app state. With a cached profile the app is usable at once (one bar of signal must
+ * never mean a blank screen); the profile is refreshed in the background and the state updated if it changed.
+ */
+async function resolve(auth: RemoteAuth, session: Session | null): Promise<SessionState> {
+  if (!session) {
+    setWriter(null);
+    return { status: 'signed-out' };
+  }
+  const cached = await cachedProfile(session);
+  if (cached) {
+    void freshOrCached(auth, session).then((fresh) => {
+      if (fresh && JSON.stringify(fresh) !== JSON.stringify(cached)) sessionStore.set(stateFor(session, fresh));
+    });
+    return stateFor(session, cached);
+  }
+  return stateFor(session, await freshOrCached(auth, session));
 }
 
 let current: RemoteAuth | null = null;

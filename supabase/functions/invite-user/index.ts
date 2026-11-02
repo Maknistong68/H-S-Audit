@@ -55,6 +55,9 @@ Deno.serve(async (req: Request) => {
   if (!ROLES.includes(role)) return json({ error: 'unknown role' }, 400, headers);
 
   const admin = createClient(url, secretKey(), { auth: { persistSession: false } });
+  // Someone who already has an account keeps their role: the Team screen changes roles explicitly.
+  const { data: existing } = await admin.from('profiles').select('id').eq('email', email).maybeSingle();
+  if (existing) return json({ status: 'exists' }, 200, headers);
   const { error: inviteRowError } = await admin.from('invites').upsert({ email, role, invited_by: userData.user.id }, { onConflict: 'email' });
   if (inviteRowError) return json({ error: inviteRowError.message }, 500, headers);
 

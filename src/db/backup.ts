@@ -5,6 +5,8 @@ import { db, type Answer, type Audit, type MediaBlob, type MediaOwner, type Medi
 import { answerId, newId } from './ids';
 import { emptyHeader, normaliseAudit, repo } from './repo';
 import { takeSnapshot, type MediaMeta } from './snapshots';
+import type { Remote } from '../server/remote';
+import { ensurePhotos } from '../sync/photos';
 import { uploadAudit } from '../sync/uploadLocal';
 
 export const BACKUP_FORMAT_VERSION = 1;
@@ -32,10 +34,14 @@ export function audioExt(mime: string): 'webm' | 'm4a' | 'ogg' | 'bin' {
   return 'bin';
 }
 
-/** One zip: audit.json plus photos/, thumbs/ and audio/ — stored, not compressed; media is already compressed. */
-export async function buildBackup(auditId: string): Promise<{ bytes: Uint8Array; filename: string }> {
+/**
+ * One zip: audit.json plus photos/, thumbs/ and audio/ — stored, not compressed; media is already compressed.
+ * With a remote, teammates' photos that are not on this device yet are fetched first (like the Excel export).
+ */
+export async function buildBackup(auditId: string, opts: { remote?: Remote; onProgress?(done: number, total: number): void } = {}): Promise<{ bytes: Uint8Array; filename: string; missingPhotos: number }> {
   const audit = await repo.getAudit(auditId);
   if (!audit) throw new Error('audit not found');
+  const missingPhotos = opts.remote ? (await ensurePhotos(opts.remote, auditId, opts.onProgress)).missing.length : 0;
   const [answers, positives, media] = await Promise.all([
     db.answers.where('auditId').equals(auditId).toArray(),
     db.positives.where('auditId').equals(auditId).toArray(),
@@ -67,7 +73,7 @@ export async function buildBackup(auditId: string): Promise<{ bytes: Uint8Array;
 
   const bytes = zipSync(files, { level: 0 });
   await repo.markExported(auditId);
-  return { bytes, filename: backupFilename(audit) };
+  return { bytes, filename: backupFilename(audit), missingPhotos };
 }
 
 const copyBuffer = (u8: Uint8Array): ArrayBuffer => u8.slice().buffer as ArrayBuffer;

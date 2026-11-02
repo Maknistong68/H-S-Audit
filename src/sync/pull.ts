@@ -19,21 +19,37 @@ async function setting<T>(key: string, fallback: T): Promise<T> {
   return row === undefined ? fallback : (row.value as T);
 }
 
-/** Fetches everything changed since the last pull, merges it, and refreshes the team directory. Returns rows applied. */
-export async function pullOnce(remote: Remote): Promise<number> {
+/**
+ * Fetches everything changed since the last pull, merges it, and refreshes the team directory. Returns rows applied.
+ * Rows written in one server transaction share a server_at, so a page that ends inside such a group continues
+ * with an inclusive request from that stamp (re-merging a few rows is harmless; skipping them would lose data).
+ */
+export async function pullOnce(remote: Remote, opts: { page?: number } = {}): Promise<number> {
+  const page = opts.page ?? PAGE;
   let applied = 0;
   for (const table of TABLES) {
     let cursor = await setting<string | null>(cursorKey(table), null);
+    let inclusive = false;
+    let limit = page;
     let newest: string | null = null;
     for (;;) {
-      const rows = await remote.pull(table, cursor, PAGE);
+      const rows = await remote.pull(table, cursor, limit, { inclusive });
       for (const row of rows) {
         await applyIncoming(table, row);
         applied += 1;
         if (row.server_at && (!newest || row.server_at > newest)) newest = row.server_at;
       }
-      if (rows.length < PAGE) break;
-      cursor = rows[rows.length - 1].server_at ?? cursor;
+      if (rows.length < limit) break;
+      const first = rows[0].server_at ?? null;
+      const last = rows[rows.length - 1].server_at ?? null;
+      if (last === null) break;
+      if (inclusive && first === last && cursor === last) {
+        limit *= 2; // the group sharing this stamp is larger than the page: fetch it whole
+        continue;
+      }
+      inclusive = true;
+      cursor = last;
+      limit = page;
     }
     if (newest) await db.settings.put({ key: cursorKey(table), value: cursorFrom(newest) });
   }

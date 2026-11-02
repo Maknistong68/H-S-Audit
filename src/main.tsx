@@ -22,6 +22,7 @@ registerUpdates((apply) => toast('A new version is ready', { action: { label: 'R
 void (async () => {
   const { remote, auth } = await loadServer();
   startEngine({ remote, auth, win: window });
-  await startSession(auth);
+  // Paint at once (the gate shows a loading screen) rather than wait for the network on a weak signal.
   render(<App />, document.getElementById('app')!);
+  await startSession(auth);
 })();

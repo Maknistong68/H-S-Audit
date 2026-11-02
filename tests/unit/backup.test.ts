@@ -3,6 +3,7 @@ import { unzipSync, strFromU8, zipSync, strToU8 } from 'fflate';
 import { db } from '../../src/db/db';
 import { repo } from '../../src/db/repo';
 import { buildBackup, importBackup, audioExt } from '../../src/db/backup';
+import { createFake } from '../../src/server/fakeRemote';
 
 beforeEach(async () => {
   await db.delete();
@@ -100,3 +101,15 @@ test('audio extensions', () => {
   expect(audioExt('audio/ogg')).toBe('ogg');
   expect(audioExt('x')).toBe('bin');
 });
+
+test("the backup fetches a teammate's photo that is not on this device yet", async () => {
+  const { remote, auth, control } = createFake();
+  await auth.signIn('auditor@test', 'test1234');
+  const a = await repo.createAudit({ auditNo: 'HSSEW-080' });
+  await db.media.put({ id: 'tm1', auditId: a.id, owner: { kind: 'item', itemId: 'A1' }, type: 'photo', mime: 'image/jpeg', bytes: 3, createdAt: 1, storagePath: `${a.id}/tm1.jpg`, uploadedAt: 2, thumb: new Uint8Array([7]).buffer });
+  control.putPhoto(`${a.id}/tm1.jpg`, new Uint8Array([1, 2, 3]).buffer);
+  const { bytes } = await buildBackup(a.id, { remote });
+  const files = unzipSync(bytes);
+  expect(Array.from(files['photos/tm1.jpg'])).toEqual([1, 2, 3]);
+});
+

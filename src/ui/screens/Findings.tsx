@@ -19,6 +19,7 @@ import { ReadyText } from '../components/ReadyText';
 import { RESULT_OPTIONS } from '../components/ResultControl';
 import { TopBar } from '../components/TopBar';
 import { useAudit } from '../hooks/useAudit';
+import { useAuditChannel } from '../hooks/useAuditChannel';
 import { useLiveQuery } from '../hooks/useLiveQuery';
 import { useStore } from '../hooks/useStore';
 import { paths } from '../paths';
@@ -92,6 +93,7 @@ function FindingRow({ auditId, auditNo, item, answer, media, lang, readOnly }: {
 
 export function Findings({ id }: { id: string }) {
   const view = useAudit(id);
+  const { deletedBy } = useAuditChannel(id);
   const positives = useLiveQuery<Positive[]>(() => repo.listPositives(id), [id]);
   const media = useLiveQuery<MediaRow[]>(() => repo.listMediaMeta(id), [id]);
   const lang = useLiveQuery(() => repo.getSetting('dictationLang', 'en-US'), []) ?? 'en-US';
@@ -119,6 +121,19 @@ export function Findings({ id }: { id: string }) {
         <main class="screen">
           <p class="empty">
             This audit no longer exists. <a href={paths.home()}>Back to audits</a>
+          </p>
+        </main>
+      </>
+    );
+  }
+
+  if (view?.audit?.deletedAt !== undefined || deletedBy) {
+    return (
+      <>
+        <TopBar title="Findings" back={paths.home()} />
+        <main class="screen">
+          <p class="empty" role="alert">
+            This audit was deleted by {deletedBy ?? 'a teammate'}. Nothing you entered is lost; an admin can restore it. <a href={paths.home()}>Back to audits</a>
           </p>
         </main>
       </>

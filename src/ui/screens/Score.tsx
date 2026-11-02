@@ -7,12 +7,14 @@ import { BottomNav } from '../components/BottomNav';
 import { ScoreBar, pct } from '../components/ScoreBar';
 import { TopBar } from '../components/TopBar';
 import { useAudit } from '../hooks/useAudit';
+import { useAuditChannel } from '../hooks/useAuditChannel';
 import { paths } from '../paths';
 
 const fmt = (n: number) => (Number.isInteger(n) ? String(n) : n.toFixed(1));
 
 export function Score({ id }: { id: string }) {
   const view = useAudit(id);
+  const { deletedBy } = useAuditChannel(id);
   const score = useMemo(() => {
     const answers = view?.answers ?? new Map<string, Answer>();
     const results = new Map<string, Result | undefined>();
@@ -27,6 +29,19 @@ export function Score({ id }: { id: string }) {
         <main class="screen">
           <p class="empty">
             This audit no longer exists. <a href={paths.home()}>Back to audits</a>
+          </p>
+        </main>
+      </>
+    );
+  }
+
+  if (view?.audit?.deletedAt !== undefined || deletedBy) {
+    return (
+      <>
+        <TopBar title="Score" back={paths.home()} />
+        <main class="screen">
+          <p class="empty" role="alert">
+            This audit was deleted by {deletedBy ?? 'a teammate'}. Nothing you entered is lost; an admin can restore it. <a href={paths.home()}>Back to audits</a>
           </p>
         </main>
       </>

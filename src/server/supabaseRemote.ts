@@ -55,9 +55,9 @@ export function createSupabaseRemote(client: SupabaseClient): Remote {
       return { applied: data?.applied ?? 0, skipped: data?.skipped ?? 0 };
     },
 
-    async pull(table, since, limit) {
+    async pull(table, since, limit, opts) {
       let query = client.from(table).select('*').order('server_at', { ascending: true }).limit(limit);
-      if (since !== null) query = query.gt('server_at', since);
+      if (since !== null) query = opts?.inclusive ? query.gte('server_at', since) : query.gt('server_at', since);
       return (await call<RemoteRow[]>(() => query)) ?? [];
     },
 

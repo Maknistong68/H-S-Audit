@@ -193,9 +193,11 @@ export const repo = {
     const expected = audit.header.auditNo.trim() || PURGE_FALLBACK_WORD;
     if (typedAuditNo.trim() !== expected) throw new Error('audit number does not match');
     await writeChange({ table: 'hs_audits', key: { id }, fields: { deleted_at: Date.now() } });
-    await db.transaction('rw', [db.media, db.mediaBlobs, db.settings], async () => {
-      const mediaIds = await db.media.where('auditId').equals(id).primaryKeys();
-      await db.mediaBlobs.bulkDelete(mediaIds);
+    await db.transaction('rw', [db.media, db.mediaBlobs, db.outbox, db.settings], async () => {
+      // Free this phone's copy of photos the team already has; keep the bytes of any still waiting to upload.
+      const pending = new Set((await db.outbox.where('auditId').equals(id).toArray()).filter((e) => e.kind === 'photo').map((e) => e.change.key.id));
+      const rows = await db.media.where('auditId').equals(id).toArray();
+      await db.mediaBlobs.bulkDelete(rows.filter((m) => !pending.has(m.id)).map((m) => m.id));
       await db.settings.delete(`walk:${id}`);
     });
   },
