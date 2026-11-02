@@ -3,6 +3,7 @@ import { buildBackup } from '../../db/backup';
 import type { Snapshot } from '../../db/db';
 import { repo } from '../../db/repo';
 import { listSnapshots } from '../../db/snapshots';
+import { relativeTime } from '../../domain/time';
 import { preflight, type PreflightIssue } from '../../export/preflight';
 import { BottomNav } from '../components/BottomNav';
 import { Icon } from '../components/icons';
@@ -18,16 +19,6 @@ import { paths } from '../paths';
 
 const XLSX_MIME = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
 type Kind = 'excel' | 'backup';
-
-export function relativeTime(ts: number, now = Date.now()): string {
-  const s = Math.max(0, Math.round((now - ts) / 1000));
-  if (s < 60) return 'just now';
-  const m = Math.round(s / 60);
-  if (m < 60) return `${m} min ago`;
-  const h = Math.round(m / 60);
-  if (h < 24) return `${h} h ago`;
-  return new Date(ts).toLocaleDateString(undefined, { day: 'numeric', month: 'short' });
-}
 
 export function Export({ id }: { id: string }) {
   const view = useAudit(id);

@@ -1,4 +1,4 @@
-import { test, expect } from './fixtures';
+import { test, expect, signInAs } from './fixtures';
 
 test('create audit, fill header, survives reload, archive and purge gate', async ({ page }) => {
   await page.goto('./');
@@ -13,10 +13,39 @@ test('create audit, fill header, survives reload, archive and purge gate', async
   await expect(page.getByText('HSSEW-004')).toBeVisible();
   await page.getByRole('button', { name: 'Archive', exact: true }).click(); // not "Show archived"
   await expect(page.getByText('HSSEW-004')).toBeHidden();
-  await page.getByRole('button', { name: 'Show archived' }).click();
-  await page.getByRole('button', { name: 'Purge' }).click();
+  await page.getByRole('button', { name: 'Archived' }).click();
+  await expect(page.getByText('HSSEW-004')).toBeVisible();
+  await page.getByRole('button', { name: 'Delete for the team' }).click();
   await page.getByLabel('Type the audit number to confirm').fill('WRONG');
-  await expect(page.getByRole('button', { name: 'Purge permanently' })).toBeDisabled();
+  await expect(page.getByRole('button', { name: 'Delete for the team', exact: true })).toBeDisabled();
+  await page.getByLabel('Type the audit number to confirm').fill('HSSEW-004');
+  await page.getByRole('button', { name: 'Delete for the team', exact: true }).click();
+  await expect(page.locator('.list-row-title', { hasText: 'HSSEW-004' })).toBeHidden();
+  await page.getByRole('button', { name: 'All' }).click();
+  await expect(page.locator('.list-row-title', { hasText: 'HSSEW-004' })).toBeHidden();
+});
+
+test('admins see deleted audits and can restore them; search finds by project', async ({ page }) => {
+  await signInAs(page, 'admin@test');
+  await page.getByRole('button', { name: 'New audit' }).click();
+  await page.getByLabel('Audit no').fill('HSSEW-030');
+  await page.getByLabel('Project name').fill('Pipeline camp');
+  await expect(page.getByText('All changes saved')).toBeVisible();
+  await page.goto('./');
+  await page.getByLabel('Search audits').fill('pipeline');
+  await expect(page.getByText('HSSEW-030')).toBeVisible();
+  await page.getByLabel('Search audits').fill('nothing-here');
+  await expect(page.getByText('HSSEW-030')).toBeHidden();
+  await page.getByLabel('Search audits').fill('');
+  await page.getByRole('button', { name: 'Delete for the team' }).click();
+  await page.getByLabel('Type the audit number to confirm').fill('HSSEW-030');
+  await page.getByRole('button', { name: 'Delete for the team', exact: true }).click();
+  await expect(page.locator('.list-row-title', { hasText: 'HSSEW-030' })).toBeHidden();
+  await page.getByRole('button', { name: 'Deleted' }).click();
+  await expect(page.locator('.list-row-title', { hasText: 'HSSEW-030' })).toBeVisible();
+  await page.getByRole('button', { name: 'Restore' }).click();
+  await page.getByRole('button', { name: 'All' }).click();
+  await expect(page.locator('.list-row-title', { hasText: 'HSSEW-030' })).toBeVisible();
 });
 
 test('a damaged audit row does not lock the auditor out', async ({ page }) => {

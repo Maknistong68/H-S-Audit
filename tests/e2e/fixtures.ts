@@ -16,13 +16,20 @@ export const test = base.extend({
 });
 
 export { expect };
+export type { Page };
 
-/** Signs out whoever is signed in and signs in through the form as `email`. */
+/** Signs out whoever is signed in (through Settings) and signs in through the form as `email`. */
 export async function signInAs(page: Page, email: string): Promise<void> {
-  await page.goto('./sign-in');
-  await page.evaluate(() => localStorage.removeItem('hs:fakeSession'));
-  await page.goto('./sign-in');
+  await page.goto('./settings');
+  const signOut = page.getByRole('button', { name: 'Sign out' });
+  const signedIn = await signOut.waitFor({ state: 'visible', timeout: 3000 }).then(
+    () => true,
+    () => false, // nobody signed in: Settings already redirected to the sign-in screen
+  );
+  if (signedIn) await signOut.click();
+  await page.waitForURL(/\/sign-in$/);
   await page.getByLabel('Email').fill(email);
   await page.getByLabel('Password').fill(FAKE_PASSWORD);
   await page.getByRole('button', { name: 'Sign in' }).click();
+  await page.waitForURL((url) => !/\/sign-in$/.test(url.pathname));
 }

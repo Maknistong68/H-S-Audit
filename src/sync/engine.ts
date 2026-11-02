@@ -99,6 +99,8 @@ export function startEngine(deps: { remote: Remote; auth: RemoteAuth; win: Windo
   }
 
   function requestPush(): void {
+    // Be honest at once: a fresh local change means "not up to date" until the push lands.
+    if (syncStatus.get().kind === 'synced') void pending().then((n) => n > 0 && syncStatus.get().kind === 'synced' && syncStatus.set({ kind: 'syncing', pending: n }));
     if (pushTimer) clearTimeout(pushTimer);
     pushTimer = setTimeout(() => void runPush(), PUSH_DEBOUNCE_MS);
   }

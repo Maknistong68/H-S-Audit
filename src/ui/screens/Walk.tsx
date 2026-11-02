@@ -20,6 +20,7 @@ import type { NoteFieldHandle } from '../components/NoteField';
 import { ProgressLine } from '../components/ProgressLine';
 import { TopBar } from '../components/TopBar';
 import { useAudit } from '../hooks/useAudit';
+import { useAuditChannel } from '../hooks/useAuditChannel';
 import { useKeyboardShortcuts, type WalkShortcuts } from '../hooks/useKeyboardShortcuts';
 import { useLiveQuery } from '../hooks/useLiveQuery';
 import { DESK_QUERY, useMediaQuery } from '../hooks/useMediaQuery';
@@ -135,6 +136,7 @@ export function Walk({ id }: { id: string }) {
   const flagged = [...answers.values()].filter((a) => a.flagged).length;
 
   const expandedId = state?.expandedId ?? null;
+  const { deletedBy } = useAuditChannel(id, expandedId);
   const expandedVisible = expandedId !== null && rows.some((r) => r.kind === 'item' && r.id === expandedId);
   const expandedItem = expandedVisible ? itemById(expandedId!) : undefined;
 
@@ -177,6 +179,19 @@ export function Walk({ id }: { id: string }) {
         <main class="screen">
           <p class="empty">
             This audit no longer exists. <a href={paths.home()}>Back to audits</a>
+          </p>
+        </main>
+      </>
+    );
+  }
+
+  if (view?.audit?.deletedAt !== undefined || deletedBy) {
+    return (
+      <>
+        <TopBar title="Walk" back={paths.home()} />
+        <main class="screen">
+          <p class="empty" role="alert">
+            This audit was deleted by {deletedBy ?? 'a teammate'}. Nothing you entered is lost; an admin can restore it. <a href={paths.home()}>Back to audits</a>
           </p>
         </main>
       </>

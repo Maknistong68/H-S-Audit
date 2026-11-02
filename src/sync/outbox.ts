@@ -88,24 +88,30 @@ export async function writeChange(input: { table: SyncTable; key: Record<string,
   notify();
 }
 
-/** A new photo: bytes and metadata locally, plus a queued upload followed by its row. */
-export async function writePhoto(row: MediaRow, data: ArrayBuffer): Promise<void> {
+/** Queues an upload (then its row) for a photo whose bytes and metadata are already stored on this device. */
+export async function queuePhoto(row: MediaRow): Promise<void> {
   const by = writerOrThrow().id;
-  const at = Math.max(Date.now(), row.createdAt);
-  const remote = photoToRemote({ ...row, createdBy: by, storagePath: photoStoragePath(row.auditId, row.id), uploadedAt: undefined, updatedAt: at, updatedBy: by });
+  const at = Math.max(row.updatedAt ?? 0, row.createdAt);
+  const remote = photoToRemote({ ...row, createdBy: row.createdBy ?? by, storagePath: row.storagePath ?? photoStoragePath(row.auditId, row.id), uploadedAt: undefined, updatedAt: at, updatedBy: by });
   const fields: Record<string, unknown> = {};
   for (const [k, v] of Object.entries(remote)) if (k !== 'id' && !SYNC_COLUMNS.includes(k)) fields[k] = v;
   const change: Change = { table: 'hs_photos', key: { id: row.id }, fields, at };
-  const local = toLocal('hs_photos', applyChange(undefined, change, by).row, undefined) as MediaRow;
-  local.createdBy = by;
+  const local = toLocal('hs_photos', applyChange(undefined, change, by).row, row) as MediaRow;
+  local.createdBy = row.createdBy ?? by;
   if (row.thumb) local.thumb = row.thumb;
-  await db.transaction('rw', [db.media, db.mediaBlobs, db.outbox, db.audits], async () => {
-    await db.mediaBlobs.put({ id: row.id, data });
+  await db.transaction('rw', [db.media, db.outbox, db.audits], async () => {
     await db.media.put(local);
     await db.outbox.add({ kind: 'photo', table: 'hs_photos', key: rowKey('hs_photos', { id: row.id }), auditId: row.auditId, change, attempts: 0 });
     await bumpActivity(row.auditId, at, by);
   });
   notify();
+}
+
+/** A new photo: bytes and metadata locally, plus a queued upload followed by its row. */
+export async function writePhoto(row: MediaRow, data: ArrayBuffer): Promise<void> {
+  writerOrThrow();
+  await db.mediaBlobs.put({ id: row.id, data });
+  await queuePhoto({ ...row, updatedAt: Math.max(Date.now(), row.createdAt) });
 }
 
 /** Pending patches for one row, oldest first. */

@@ -5,6 +5,7 @@ import { db, type Answer, type Audit, type MediaBlob, type MediaOwner, type Medi
 import { answerId, newId } from './ids';
 import { emptyHeader, normaliseAudit, repo } from './repo';
 import { takeSnapshot, type MediaMeta } from './snapshots';
+import { uploadAudit } from '../sync/uploadLocal';
 
 export const BACKUP_FORMAT_VERSION = 1;
 
@@ -127,6 +128,7 @@ export async function importBackup(bytes: Uint8Array): Promise<{ auditId: string
     updatedAt: now,
     importedAt: now,
     lastExportAt: now, // the backup file itself is the export
+    localOnly: true, // until uploadAudit below has queued it for the team
   };
   const answers: Answer[] = manifest.answers.map((a) => ({
     ...a,
@@ -170,6 +172,7 @@ export async function importBackup(bytes: Uint8Array): Promise<{ auditId: string
     await db.mediaBlobs.bulkAdd(blobs);
     await db.media.bulkAdd(rows);
   });
+  await uploadAudit(auditId); // an imported audit is a team audit from the start
   await takeSnapshot(auditId, 'before-import');
   return { auditId, warnings };
 }
