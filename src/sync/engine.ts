@@ -185,7 +185,13 @@ export function startEngine(deps: { remote: Remote; auth: RemoteAuth; win: Windo
   }
 
   function watchList(): () => void {
-    return remote.subscribe('team:audits', { onRow, onStatus: () => undefined });
+    // A pull once the channel is up closes the gap between the last pull and the first live row.
+    return remote.subscribe('team:audits', {
+      onRow,
+      onStatus: (status) => {
+        if (status === 'subscribed') void pullNow();
+      },
+    });
   }
 
   const onOnline = () => {

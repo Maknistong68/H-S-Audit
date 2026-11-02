@@ -67,3 +67,13 @@ test('a damaged audit row does not lock the auditor out', async ({ page }) => {
   await expect(page.getByText('Untitled audit').first()).toBeVisible();
   await expect(page.getByRole('button', { name: 'New audit' })).toBeVisible();
 });
+
+test('the header offers the contractor list and fills the WO field', async ({ page }) => {
+  await page.goto('./');
+  await page.getByRole('button', { name: 'New audit' }).click();
+  await expect(page.getByLabel('Audit no')).toBeVisible();
+  await page.getByLabel('Contractor', { exact: true }).selectOption('4800001322');
+  await expect(page.getByLabel('Contractor / WO')).toHaveValue('4800001322-AL FAHD CONTRACTING');
+  await expect(page.getByText('All changes saved')).toBeVisible();
+});
+

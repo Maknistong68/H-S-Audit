@@ -164,10 +164,21 @@ export async function loadTemplate(): Promise<ArrayBuffer> {
   return res.arrayBuffer();
 }
 
-/** Gathers the audit from the database, builds the workbook and marks the audit exported. */
-export async function exportExcel(auditId: string): Promise<{ bytes: Uint8Array; filename: string }> {
+/**
+ * Gathers the audit from the database, builds the workbook and marks the audit exported. Teammates' photos
+ * that are not on this device yet are downloaded first; the ones that cannot be fetched are counted.
+ */
+export async function exportExcel(auditId: string, opts: { onProgress?(done: number, total: number): void } = {}): Promise<{ bytes: Uint8Array; filename: string; missingPhotos: number }> {
   const audit = await repo.getAudit(auditId);
   if (!audit) throw new Error('audit not found');
+  const { ensurePhotos } = await import('../sync/photos');
+  const { server } = await import('../server');
+  let missingPhotos = 0;
+  try {
+    missingPhotos = (await ensurePhotos(server().remote, auditId, opts.onProgress)).missing.length;
+  } catch {
+    /* no server loaded (tests): export what is here */
+  }
   const [answerRows, positives, media, template] = await Promise.all([
     repo.getAnswers(auditId),
     repo.listPositives(auditId),
@@ -186,5 +197,5 @@ export async function exportExcel(auditId: string): Promise<{ bytes: Uint8Array;
   const { composePhotos } = await import('./composePhotos');
   const bytes = await buildXlsx(template, { audit, answers, positives, photos, score: scoreAudit(results) }, { compose: composePhotos });
   await repo.markExported(auditId);
-  return { bytes, filename: excelFilename(audit) };
+  return { bytes, filename: excelFilename(audit), missingPhotos };
 }

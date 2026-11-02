@@ -27,6 +27,8 @@ export interface FakeControl {
   acceptInvite(email: string, password: string, fullName: string): void;
   /** Emails that got a sign-in / reset link. */
   resets(): string[];
+  /** Another member announces where they are (or leaves, with itemId null and the next call absent). */
+  presence(who: string, topic: string, itemId: string | null): void;
 }
 
 interface FakeUser {
@@ -305,6 +307,11 @@ export function createFake(opts: { storage?: Storage } = {}): { remote: Remote; 
       u.role = invites.get(u.email)?.role ?? u.role;
     },
     resets: () => [...resets],
+    presence: (who, topic, itemId) => {
+      const u = findUser(who);
+      if (!u) throw new Error(`no fake user ${who}`);
+      remote.track(topic, { userId: u.id, name: u.fullName ?? u.email, itemId, at: Date.now() });
+    },
   };
 
   return { remote, auth, control };

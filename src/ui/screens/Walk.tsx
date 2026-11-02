@@ -1,5 +1,6 @@
 import { useLocation } from 'preact-iso';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'preact/hooks';
+import { sessionStore } from '../../auth/session';
 import { allItems, itemById } from '../../data/checklist';
 import type { MediaRow, Tag } from '../../db/db';
 import { flushPendingWrites } from '../../db/flush';
@@ -8,6 +9,7 @@ import { repo } from '../../db/repo';
 import { snapshotIfDirty, startSnapshotTimer } from '../../db/snapshots';
 import { sentenceCase } from '../../domain/text';
 import type { ChecklistItem, Result } from '../../domain/types';
+import { canEdit } from '../../sync/writer';
 import { Banner } from '../components/Banner';
 import { BottomNav } from '../components/BottomNav';
 import { Icon } from '../components/icons';
@@ -16,6 +18,7 @@ import { ItemMediaTools } from '../components/ItemMedia';
 import { JumpSheet } from '../components/JumpSheet';
 import { MediaStrip } from '../components/MediaStrip';
 import { ModeSwitch } from '../components/ModeSwitch';
+import { Presence } from '../components/Presence';
 import type { NoteFieldHandle } from '../components/NoteField';
 import { ProgressLine } from '../components/ProgressLine';
 import { TopBar } from '../components/TopBar';
@@ -24,6 +27,7 @@ import { useAuditChannel } from '../hooks/useAuditChannel';
 import { useKeyboardShortcuts, type WalkShortcuts } from '../hooks/useKeyboardShortcuts';
 import { useLiveQuery } from '../hooks/useLiveQuery';
 import { DESK_QUERY, useMediaQuery } from '../hooks/useMediaQuery';
+import { useStore } from '../hooks/useStore';
 import { paths } from '../paths';
 import { adjacentItem, DEFAULT_WALK_STATE, nextIncomplete, nextUnanswered, tagCounts, visibleRows, type WalkRow, type WalkState } from '../walk/walkState';
 
@@ -67,7 +71,11 @@ export function Walk({ id }: { id: string }) {
   const tagsByItem = useLiveQuery(() => repo.listItemTags(), []);
   const tags = useLiveQuery<Tag[]>(() => repo.listTags(), []);
   const media = useLiveQuery<MediaRow[]>(() => repo.listMediaMeta(id), [id]);
+  const members = useLiveQuery(() => repo.listMembers(), []);
   const lang = useLiveQuery(() => repo.getSetting('dictationLang', 'en-US'), []) ?? 'en-US';
+  const session = useStore(sessionStore);
+  const me = session.status === 'ready' ? session.me : null;
+  const readOnly = !canEdit(me?.role);
   const [state, setState] = useState<WalkState | null>(null);
   const [jumpOpen, setJumpOpen] = useState(false);
   const [interim, setInterim] = useState('');
@@ -136,7 +144,18 @@ export function Walk({ id }: { id: string }) {
   const flagged = [...answers.values()].filter((a) => a.flagged).length;
 
   const expandedId = state?.expandedId ?? null;
-  const { deletedBy } = useAuditChannel(id, expandedId);
+  const { others, deletedBy } = useAuditChannel(id, expandedId);
+  const hereByItem = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const p of others) if (p.itemId && !map.has(p.itemId)) map.set(p.itemId, p.name);
+    return map;
+  }, [others]);
+  const nameOf = (userId?: string): string => {
+    if (!userId) return 'Someone';
+    if (userId === me?.id) return 'you';
+    const m = members?.find((x) => x.id === userId);
+    return m?.fullName || m?.email || 'Someone';
+  };
   const expandedVisible = expandedId !== null && rows.some((r) => r.kind === 'item' && r.id === expandedId);
   const expandedItem = expandedVisible ? itemById(expandedId!) : undefined;
 
@@ -203,17 +222,21 @@ export function Walk({ id }: { id: string }) {
   const renderCard = (item: ChecklistItem, expanded: boolean, domId?: string) => {
     const owner = { kind: 'item', itemId: item.id } as const;
     const itemMedia = mediaByOwner.get(ownerKey(owner)) ?? [];
+    const answer = answers.get(item.id);
     return (
       <ItemCard
         key={domId ?? item.id}
         domId={domId}
         auditId={id}
         item={item}
-        answer={answers.get(item.id)}
+        answer={answer}
         expanded={expanded}
+        readOnly={readOnly}
+        here={hereByItem.get(item.id)}
+        editedBy={answer?.updatedBy ? { name: nameOf(answer.updatedBy), at: answer.updatedAt } : undefined}
         mediaCounts={{ photos: itemMedia.filter((m) => m.type === 'photo').length, audio: itemMedia.filter((m) => m.type === 'audio').length }}
         media={
-          expanded ? (
+          expanded && !readOnly ? (
             <ItemMediaTools
               auditId={id}
               auditNo={audit?.header.auditNo ?? ''}
@@ -229,7 +252,7 @@ export function Walk({ id }: { id: string }) {
             />
           ) : undefined
         }
-        mediaStrip={expanded ? <MediaStrip media={itemMedia} auditNo={audit?.header.auditNo ?? ''} /> : undefined}
+        mediaStrip={expanded ? <MediaStrip media={itemMedia} auditNo={audit?.header.auditNo ?? ''} readOnly={readOnly} /> : undefined}
         interim={expanded ? interim : undefined}
         noteRef={
           expanded
@@ -295,10 +318,13 @@ export function Walk({ id }: { id: string }) {
         back={paths.home()}
         subtitle={audit?.header.auditNo || 'Untitled audit'}
         right={
-          <button type="button" class="btn btn-quiet btn-sm" onClick={() => setJumpOpen(true)}>
-            <Icon name="jump" size={20} />
-            Jump to
-          </button>
+          <>
+            <Presence others={others} />
+            <button type="button" class="btn btn-quiet btn-sm" onClick={() => setJumpOpen(true)}>
+              <Icon name="jump" size={20} />
+              Jump to
+            </button>
+          </>
         }
       />
 
@@ -348,7 +374,8 @@ export function Walk({ id }: { id: string }) {
       </div>
 
       <main class={`screen has-nav walk-screen${desk ? ' walk-desk' : ''}`}>
-        {needsBackup && (
+        {readOnly && <Banner tone="info">Read-only account: you can view and export this audit but not change it.</Banner>}
+        {needsBackup && !readOnly && (
           <Banner tone="warn" action={{ label: 'Export backup', onClick: () => route(paths.export(id)) }}>
             Edits not backed up for over 2 hours.
           </Banner>

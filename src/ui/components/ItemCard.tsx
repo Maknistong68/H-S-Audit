@@ -2,6 +2,7 @@ import type { ComponentChildren } from 'preact';
 import { useEffect, useRef, useState } from 'preact/hooks';
 import type { Answer } from '../../db/db';
 import { appendText } from '../../domain/text';
+import { relativeTime } from '../../domain/time';
 import type { ChecklistItem, Result } from '../../domain/types';
 import { Icon } from './icons';
 import { NoteField, type NoteFieldHandle } from './NoteField';
@@ -31,6 +32,12 @@ export interface ItemCardProps {
   noteRef?: (h: NoteFieldHandle | null) => void;
   /** DOM id; the desk layout renders the same item twice (list and detail). */
   domId?: string;
+  /** Who last changed this answer, for the open card. */
+  editedBy?: { name: string; at: number };
+  /** A viewer account: everything is shown, nothing can be changed. */
+  readOnly?: boolean;
+  /** A teammate who has this question open right now. */
+  here?: string;
 }
 
 const resultLabel = (r?: Result) => RESULT_OPTIONS.find((o) => o.value === r)?.label;
@@ -96,6 +103,7 @@ export function ItemCard(props: ItemCardProps) {
         <span class="row-id">{item.id}</span>
         <span class="row-main">
           <span class="row-q">{item.text}</span>
+          {props.here && <span class="row-here">{props.here} is here</span>}
           {!expanded && negative && !note.trim() && <span class="row-needs">Note needed</span>}
           {!expanded && previewBits.length > 0 && <span class="row-preview">{previewBits.join('   ')}</span>}
         </span>
@@ -121,20 +129,26 @@ export function ItemCard(props: ItemCardProps) {
               </span>
             </div>
 
-            <ResultControl value={result} onChange={setResult} />
+            <ResultControl value={result} onChange={setResult} disabled={props.readOnly} />
+            {props.editedBy && (
+              <p class="row-edited">
+                Edited by {props.editedBy.name} · {relativeTime(props.editedBy.at)}
+              </p>
+            )}
 
-            {noteOpen ? (
+            {noteOpen || (props.readOnly && note) ? (
               <NoteField
                 id={`${props.auditId}:${item.id}`}
                 value={note}
                 onSave={props.onNote}
                 interim={props.interim}
+                disabled={props.readOnly}
                 ref={(h: NoteFieldHandle | null) => {
                   noteHandle.current = h;
                   props.noteRef?.(h);
                 }}
               />
-            ) : (
+            ) : props.readOnly ? null : (
               <button
                 type="button"
                 class="btn btn-quiet self-start"
@@ -149,13 +163,13 @@ export function ItemCard(props: ItemCardProps) {
             )}
 
             <div class="tool-row" role="toolbar" aria-label="Item tools">
-              <ReadyText itemId={item.id} onPick={insertText} />
+              {!props.readOnly && <ReadyText itemId={item.id} onPick={insertText} />}
               {props.media}
-              <button type="button" class="icon-btn" aria-pressed={!!answer?.flagged} onClick={() => props.onFlag(!answer?.flagged)}>
+              <button type="button" class="icon-btn" aria-pressed={!!answer?.flagged} disabled={props.readOnly} onClick={() => props.onFlag(!answer?.flagged)}>
                 <Icon name="flag" />
                 <span class="caption">Flag</span>
               </button>
-              <button type="button" class="icon-btn" aria-pressed={!!answer?.repeated} onClick={() => props.onRepeated(!answer?.repeated)}>
+              <button type="button" class="icon-btn" aria-pressed={!!answer?.repeated} disabled={props.readOnly} onClick={() => props.onRepeated(!answer?.repeated)}>
                 <Icon name="repeat" />
                 <span class="caption">Repeated</span>
               </button>

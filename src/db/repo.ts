@@ -3,7 +3,7 @@ import { appendText } from '../domain/text';
 import type { Result } from '../domain/types';
 import { HEADER_COLUMN } from '../server/rows';
 import { pendingCounts, writeChange, writePhoto } from '../sync/outbox';
-import { getWriter } from '../sync/writer';
+import { canEdit, getWriter } from '../sync/writer';
 import {
   db,
   type Answer,
@@ -178,6 +178,7 @@ export const repo = {
   },
 
   async markExported(id: string): Promise<void> {
+    if (!canEdit(getWriter()?.role) && getWriter()) return; // a viewer's export is not a team event
     await writeChange({ table: 'hs_audits', key: { id }, fields: { last_export_at: Date.now() } });
   },
 

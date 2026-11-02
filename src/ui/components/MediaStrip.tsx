@@ -1,7 +1,9 @@
-import { useState } from 'preact/hooks';
+import { useEffect, useState } from 'preact/hooks';
 import type { Media, MediaRow } from '../../db/db';
 import { repo } from '../../db/repo';
 import { photoCopyFilename } from '../../media/photoCopy';
+import { server } from '../../server';
+import { ensurePhoto } from '../../sync/photos';
 import { saveOrShare } from '../download';
 import { useLiveQuery } from '../hooks/useLiveQuery';
 import { useObjectUrl } from '../hooks/useObjectUrl';
@@ -21,17 +23,44 @@ function useMediaBytes(id: string): Media | undefined {
 
 function Thumb({ media, index, onOpen }: { media: MediaRow; index: number; onOpen(): void }) {
   const url = useObjectUrl(media.thumb, media.mime);
+  const waiting = media.type === 'photo' && media.uploadedAt === undefined;
   return (
     <button type="button" class="thumb" onClick={onOpen}>
       {url && <img src={url} alt={`Photo ${index}`} width={media.width} height={media.height} />}
+      {waiting && (
+        <span class="thumb-badge" aria-label="Waiting to upload" title="Waiting to upload">
+          <Icon name="sync" size={12} />
+        </span>
+      )}
     </button>
   );
 }
 
+/** The full-size bytes, fetched from the team's storage the first time a teammate's photo is opened here. */
 function FullPhoto({ media, index }: { media: MediaRow; index: number }) {
   const full = useMediaBytes(media.id);
+  const [failed, setFailed] = useState(false);
+  useEffect(() => {
+    if (!full?.fromThumb) return;
+    let cancelled = false;
+    void ensurePhoto(server().remote, media.id).then((ok) => {
+      if (!cancelled) setFailed(!ok);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [full?.fromThumb, media.id]);
   const url = useObjectUrl(full?.data, media.mime);
-  return url ? <img class="photo-full" src={url} alt={`Photo ${index}, full size`} /> : <p class="muted">Loading photo…</p>;
+  if (!url) return <p class="muted">Loading photo…</p>;
+  if (full?.fromThumb) {
+    return (
+      <>
+        <img class="photo-full" src={url} alt={`Photo ${index}, low-resolution copy`} />
+        <p class="muted small">{failed ? 'The full photo is not available offline; this is the thumbnail.' : 'Downloading photo…'}</p>
+      </>
+    );
+  }
+  return <img class="photo-full" src={url} alt={`Photo ${index}, full size`} />;
 }
 
 function AudioRow({ media, index, onRemove }: { media: MediaRow; index: number; onRemove(): void }) {
@@ -66,7 +95,7 @@ async function share(m: MediaRow, auditNo: string) {
 }
 
 /** Photos and memos attached to one item or positive observation. */
-export function MediaStrip({ media, auditNo }: { media: MediaRow[]; auditNo: string }) {
+export function MediaStrip({ media, auditNo, readOnly }: { media: MediaRow[]; auditNo: string; readOnly?: boolean }) {
   const [open, setOpen] = useState<number | null>(null);
   const photos = media.filter((m) => m.type === 'photo');
   const audio = media.filter((m) => m.type === 'audio');
@@ -79,9 +108,11 @@ export function MediaStrip({ media, auditNo }: { media: MediaRow[]; auditNo: str
           {photos.map((m, i) => (
             <li key={m.id}>
               <Thumb media={m} index={i + 1} onOpen={() => setOpen(i)} />
-              <button type="button" class="thumb-remove" aria-label={`Remove photo ${i + 1}`} onClick={() => remove(m, 'Photo')}>
-                <Icon name="x" size={14} />
-              </button>
+              {!readOnly && (
+                <button type="button" class="thumb-remove" aria-label={`Remove photo ${i + 1}`} onClick={() => remove(m, 'Photo')}>
+                  <Icon name="x" size={14} />
+                </button>
+              )}
               <button type="button" class="thumb-share" aria-label={`Share photo ${i + 1}`} onClick={() => void share(m, auditNo)}>
                 Share
               </button>

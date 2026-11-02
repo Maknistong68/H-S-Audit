@@ -1,4 +1,6 @@
 import { test, expect } from './fixtures';
+
+type Fake = { teammate(who: string, changes: unknown[]): void; putPhoto(path: string, data: ArrayBuffer): void };
 import ExcelJS from 'exceljs';
 import { readFile } from 'node:fs/promises';
 import { unzipSync, strFromU8 } from 'fflate';
@@ -54,5 +56,38 @@ test('Part 3 is live and evidence photos sit inside their cells', async ({ page 
   const media = Object.keys(files).filter((n) => n.startsWith('xl/media/'));
   expect(media).toEqual(['xl/media/incell1.jpeg']);
   expect(files['xl/media/incell1.jpeg'].length).toBeGreaterThan(5000); // a real composed JPEG, not a stub
+});
+
+test("the export fetches a teammate's photo it does not have yet", async ({ page }) => {
+  await page.goto('./');
+  await page.getByRole('button', { name: 'New audit' }).click();
+  await page.getByLabel('Audit no').fill('HSSEW-061');
+  await expect(page.getByText('All changes saved')).toBeVisible();
+  const id = /\/audit\/([^/]+)\//.exec(page.url())![1];
+  const jpeg = Array.from(await readFile('tests/fixtures/photo.jpg'));
+  await page.evaluate(
+    ({ id, at, jpeg }) => {
+      const fake = (window as unknown as { __hsFake: Fake }).__hsFake;
+      fake.putPhoto(`${id}/55555555-5555-4555-8555-555555555555.jpg`, new Uint8Array(jpeg).buffer);
+      fake.teammate('lead', [
+        { table: 'hs_answers', key: { audit_id: id, item_id: 'A1' }, fields: { result: 'no', note: 'See photo' }, at },
+        {
+          table: 'hs_photos',
+          key: { id: '55555555-5555-4555-8555-555555555555' },
+          fields: { audit_id: id, owner_kind: 'item', owner_id: 'A1', mime: 'image/jpeg', bytes: jpeg.length, width: 640, height: 480, thumb: null, storage_path: `${id}/55555555-5555-4555-8555-555555555555.jpg`, uploaded_at: at, created_at: at },
+          at,
+        },
+      ]);
+    },
+    { id, at: Date.now() + 1000, jpeg },
+  );
+  await page.getByRole('button', { name: 'Start walk' }).click();
+  await expect(page.locator('#item-A1').getByText('No', { exact: true })).toBeVisible({ timeout: 5_000 });
+  await page.getByRole('link', { name: 'Export' }).click();
+  await page.getByRole('button', { name: 'Export Excel' }).click();
+  const [download] = await Promise.all([page.waitForEvent('download', (d) => d.suggestedFilename().endsWith('.xlsx')), page.getByRole('button', { name: 'Export anyway' }).click()]);
+  const files = unzipSync(new Uint8Array(await readFile((await download.path()) as string)));
+  expect(Object.keys(files).filter((n) => n.startsWith('xl/media/'))).toEqual(['xl/media/incell1.jpeg']);
+  expect(files['xl/media/incell1.jpeg'].length).toBeGreaterThan(5000);
 });
 

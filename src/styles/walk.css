@@ -566,3 +566,41 @@
   font-weight: 500;
   color: var(--warn-ink);
 }
+
+/* ---- team: who is here, who edited */
+.presence {
+  display: inline-flex;
+  align-items: center;
+}
+.presence-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  margin-left: -6px;
+  border-radius: 50%;
+  background: var(--accent-soft);
+  color: var(--accent);
+  border: 2px solid var(--surface);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+.presence-chip:first-child { margin-left: 0; }
+.presence-more { background: var(--surface-3); color: var(--ink-2); }
+.row-here {
+  display: inline-block;
+  margin-top: 2px;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: var(--text-xs);
+  font-weight: 600;
+}
+.row-edited {
+  margin: 0;
+  color: var(--ink-3);
+  font-size: var(--text-xs);
+}

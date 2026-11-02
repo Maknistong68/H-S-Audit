@@ -3,6 +3,7 @@ import { useEffect, useState } from 'preact/hooks';
 import type { AuditHeader as HeaderFields } from '../../db/db';
 import { repo } from '../../db/repo';
 import { useAudit } from '../hooks/useAudit';
+import { useLiveQuery } from '../hooks/useLiveQuery';
 import { paths } from '../paths';
 import { Icon } from '../components/icons';
 import { toast } from '../components/toast';
@@ -20,6 +21,7 @@ const FIELDS: { key: keyof HeaderFields; label: string; type?: string; wide?: bo
 export function AuditHeader({ id }: { id: string }) {
   const { route } = useLocation();
   const view = useAudit(id);
+  const contractors = useLiveQuery(() => repo.listContractors(), []);
   const [form, setForm] = useState<HeaderFields | null>(null);
   const [inflight, setInflight] = useState(0);
 
@@ -32,6 +34,18 @@ export function AuditHeader({ id }: { id: string }) {
     setInflight((n) => n + 1);
     repo
       .updateHeader(id, { [key]: value })
+      .catch(() => toast('Could not save — try again'))
+      .finally(() => setInflight((n) => n - 1));
+  }
+
+  /** Picking from the dashboard's contractor list links the audit to it and fills the WO field the usual way. */
+  function pickContractor(contractorId: string) {
+    const c = contractors?.find((x) => x.id === contractorId);
+    const contractorWo = c ? `${c.id}-${c.name}` : '';
+    setForm((f) => (f ? { ...f, contractorWo: c ? contractorWo : f.contractorWo } : f));
+    setInflight((n) => n + 1);
+    repo
+      .updateHeader(id, { contractorId: contractorId || null, ...(c ? { contractorWo } : {}) })
       .catch(() => toast('Could not save — try again'))
       .finally(() => setInflight((n) => n - 1));
   }
@@ -68,6 +82,19 @@ export function AuditHeader({ id }: { id: string }) {
               </span>
             </div>
             <div class="panel-body field-grid">
+              {contractors && contractors.length > 0 && (
+                <div class="field span-2">
+                  <label for="hdr-contractor">Contractor</label>
+                  <select id="hdr-contractor" value={view?.audit?.contractorId ?? ''} onChange={(e) => pickContractor((e.currentTarget as HTMLSelectElement).value)}>
+                    <option value="">Choose from the list (optional)</option>
+                    {contractors.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.id} — {c.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
               {FIELDS.map((f) => (
                 <div class={`field${f.wide ? ' span-2' : ''}`} key={f.key}>
                   <label for={`hdr-${f.key}`}>{f.label}</label>

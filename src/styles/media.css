@@ -103,3 +103,19 @@
   min-width: 0;
   height: 40px;
 }
+
+/* a photo that has not reached the team yet */
+.thumb-badge {
+  position: absolute;
+  left: 4px;
+  bottom: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--warn-bg);
+  color: var(--warn-ink);
+  border: 1px solid var(--line-strong);
+}

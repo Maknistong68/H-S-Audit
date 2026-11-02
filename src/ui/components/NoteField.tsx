@@ -16,6 +16,7 @@ interface Props {
   interim?: string;
   label?: string;
   placeholder?: string;
+  disabled?: boolean;
 }
 
 /**
@@ -63,7 +64,8 @@ export const NoteField = forwardRef<NoteFieldHandle, Props>(function NoteField(p
         ref={textarea}
         rows={rows}
         value={local}
-        placeholder={props.placeholder ?? 'What was seen, where, and the evidence'}
+        placeholder={props.disabled ? '' : (props.placeholder ?? 'What was seen, where, and the evidence')}
+        disabled={props.disabled}
         onInput={(e) => save((e.currentTarget as HTMLTextAreaElement).value)}
       />
       {props.interim && (

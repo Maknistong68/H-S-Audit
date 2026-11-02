@@ -8,7 +8,7 @@ export const RESULT_OPTIONS: { value: Result; label: string }[] = [
 ];
 
 /** One connected segmented control; the chosen segment fills with its result colour. Tapping it again clears. */
-export function ResultControl({ value, onChange }: { value?: Result; onChange(r: Result | undefined): void }) {
+export function ResultControl({ value, onChange, disabled }: { value?: Result; onChange(r: Result | undefined): void; disabled?: boolean }) {
   return (
     <div class="seg" role="group" aria-label="Result">
       {RESULT_OPTIONS.map((o) => (
@@ -17,6 +17,7 @@ export function ResultControl({ value, onChange }: { value?: Result; onChange(r:
           type="button"
           class={`seg-btn seg-${o.value}`}
           aria-pressed={value === o.value}
+          disabled={disabled}
           onClick={() => onChange(value === o.value ? undefined : o.value)}
         >
           {o.label}
