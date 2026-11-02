@@ -36,7 +36,7 @@ test('restore replaces answers and relinks media, after a safety snapshot', asyn
   await restoreSnapshot(snap.id);
   const ans = await repo.getAnswers(a.id);
   expect(ans.find((x) => x.itemId === 'A1')!.result).toBe('full');
-  expect(ans.find((x) => x.itemId === 'A2')).toBeUndefined();
+  expect(ans.find((x) => x.itemId === 'A2')?.result).toBeUndefined(); // restore clears it; rows are never deleted
   expect((await repo.listMedia(a.id)).length).toBe(1);
   expect((await repo.getAudit(a.id))!.header.auditNo).toBe('X');
   expect((await listSnapshots(a.id)).map((s) => s.reason)).toEqual(['before-restore', 'manual']);

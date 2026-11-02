@@ -1,25 +1,34 @@
 import { allItems, builtInTags, checklist, defaultTagsFor } from '../data/checklist';
 import { appendText } from '../domain/text';
 import type { Result } from '../domain/types';
+import { HEADER_COLUMN } from '../server/rows';
+import { pendingCounts, writeChange, writePhoto } from '../sync/outbox';
+import { getWriter } from '../sync/writer';
 import {
   db,
   type Answer,
   type Audit,
   type AuditHeader,
   type AuditStatus,
+  type Contractor,
   type Media,
   type MediaOwner,
   type MediaRow,
+  type Member,
   type Positive,
   type Tag,
 } from './db';
-import { answerId, newId, ownerKey, todayIso } from './ids';
+import { newId, ownerKey, todayIso } from './ids';
 
 export interface AuditSummary extends Audit {
   answered: number;
   flagged: number;
   total: number;
+  /** Changes made on this device that have not reached the team yet. */
+  pending: number;
 }
+
+export type AuditFilter = 'all' | 'mine' | 'archived' | 'deleted';
 
 export type NewMedia = Omit<Media, 'id' | 'createdAt' | 'bytes' | 'deletedAt'>;
 
@@ -29,7 +38,7 @@ export interface MediaFilter {
   type?: Media['type'];
 }
 
-/** Typed in place of the audit number when purging an audit that has none. */
+/** Typed in place of the audit number when deleting an audit that has none. */
 export const PURGE_FALLBACK_WORD = 'DELETE';
 
 export const emptyHeader = (): AuditHeader => ({
@@ -58,21 +67,18 @@ function slug(label: string): string {
     .replace(/^-+|-+$/g, '');
 }
 
-async function touch(auditId: string, now = Date.now()): Promise<void> {
-  await db.audits.update(auditId, { updatedAt: now });
-}
+const answerKey = (auditId: string, itemId: string) => ({ audit_id: auditId, item_id: itemId });
 
-async function upsertAnswer(auditId: string, itemId: string, patch: Partial<Answer> | ((current: Answer) => Partial<Answer>)): Promise<void> {
-  const id = answerId(auditId, itemId);
-  const now = Date.now();
-  await db.transaction('rw', db.answers, db.audits, async () => {
-    const existing = await db.answers.get(id);
-    const base: Answer = existing ?? { id, auditId, itemId, note: '', flagged: false, repeated: false, updatedAt: now };
-    const change = typeof patch === 'function' ? patch(base) : patch;
-    await db.answers.put({ ...base, ...change, updatedAt: now });
-    await touch(auditId, now);
+function answerChange(auditId: string, itemId: string, fields: Record<string, unknown> | ((current: Answer) => Record<string, unknown>)): Promise<void> {
+  return writeChange({
+    table: 'hs_answers',
+    key: answerKey(auditId, itemId),
+    fields: typeof fields === 'function' ? (current) => fields({ note: '', ...(current as Partial<Answer>) } as Answer) : fields,
   });
 }
+
+const positiveChange = (id: string, fields: Record<string, unknown> | ((current: { text: string }) => Record<string, unknown>)) =>
+  writeChange({ table: 'hs_positives', key: { id }, fields: typeof fields === 'function' ? (current) => fields({ text: String(current?.text ?? '') }) : fields });
 
 async function ensureTagsSeeded(): Promise<void> {
   if ((await db.tags.count()) === 0) {
@@ -93,25 +99,37 @@ async function mediaRows(auditId: string, filter: MediaFilter): Promise<MediaRow
   return rows.filter(matches(filter, key)).sort((a, b) => a.createdAt - b.createdAt || a.id.localeCompare(b.id));
 }
 
+/** Joins bytes; a photo whose full file is not on this device yet falls back to its thumbnail. */
 async function withBytes(rows: MediaRow[]): Promise<Media[]> {
   const blobs = await db.mediaBlobs.bulkGet(rows.map((r) => r.id));
-  return rows.map((row, i) => ({ ...row, data: blobs[i]?.data ?? new ArrayBuffer(0) }));
+  return rows.map((row, i) => {
+    const data = blobs[i]?.data;
+    if (data) return { ...row, data };
+    return { ...row, data: row.thumb ?? new ArrayBuffer(0), fromThumb: !!row.thumb };
+  });
 }
+
+const headerFields = (patch: Partial<AuditHeader>): Record<string, unknown> => {
+  const fields: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(patch)) {
+    if (v === undefined) continue;
+    fields[HEADER_COLUMN[k as keyof AuditHeader]] = k === 'auditDate' ? v || null : v;
+  }
+  return fields;
+};
 
 export const repo = {
   // ---- audits
   async createAudit(header: Partial<AuditHeader> = {}): Promise<Audit> {
     const now = Date.now();
-    const audit: Audit = {
-      id: newId(),
-      templateVersion: checklist.templateVersion,
-      status: 'draft',
-      header: { ...emptyHeader(), ...header },
-      createdAt: now,
-      updatedAt: now,
-    };
-    await db.audits.add(audit);
-    return audit;
+    const id = newId();
+    await writeChange({
+      table: 'hs_audits',
+      key: { id },
+      fields: { ...headerFields({ ...emptyHeader(), ...header }), status: 'draft', template_version: checklist.templateVersion, created_at: now },
+      at: now,
+    });
+    return (await repo.getAudit(id))!;
   },
 
   async getAudit(id: string): Promise<Audit | undefined> {
@@ -119,10 +137,19 @@ export const repo = {
     return a ? normaliseAudit(a) : undefined;
   },
 
-  async listAudits(opts: { includeArchived?: boolean } = {}): Promise<AuditSummary[]> {
+  async listAudits(opts: { filter?: AuditFilter; me?: string } = {}): Promise<AuditSummary[]> {
+    const filter = opts.filter ?? 'all';
     const audits = (await db.audits.toArray()).map(normaliseAudit);
-    const visible = audits.filter((a) => opts.includeArchived || a.status !== 'archived');
+    const visible = audits.filter((a) => {
+      const deleted = a.deletedAt !== undefined;
+      if (filter === 'deleted') return deleted;
+      if (deleted) return false;
+      if (filter === 'archived') return a.status === 'archived';
+      if (a.status === 'archived') return false;
+      return filter === 'all' || a.createdBy === opts.me;
+    });
     const total = allItems().length;
+    const { byAudit } = await pendingCounts();
     const summaries = await Promise.all(
       visible.map(async (a) => {
         const answers = await db.answers.where('auditId').equals(a.id).toArray();
@@ -131,49 +158,49 @@ export const repo = {
           answered: answers.filter((x) => x.result !== undefined).length,
           flagged: answers.filter((x) => x.flagged).length,
           total,
+          pending: byAudit.get(a.id) ?? 0,
         };
       }),
     );
-    return summaries.sort((x, y) => y.updatedAt - x.updatedAt);
+    return summaries.sort((x, y) => (y.activityAt ?? y.updatedAt) - (x.activityAt ?? x.updatedAt));
   },
 
-  async updateHeader(id: string, patch: Partial<AuditHeader>): Promise<void> {
-    const now = Date.now();
-    await db.transaction('rw', db.audits, async () => {
-      const audit = await db.audits.get(id);
-      if (!audit) return;
-      const current = normaliseAudit(audit);
-      await db.audits.put({ ...current, header: { ...current.header, ...patch }, updatedAt: now });
-    });
+  async updateHeader(id: string, patch: Partial<AuditHeader> & { contractorId?: string | null }): Promise<void> {
+    const { contractorId, ...header } = patch;
+    const fields = headerFields(header);
+    if (contractorId !== undefined) fields.contractor_id = contractorId;
+    if (Object.keys(fields).length === 0) return;
+    await writeChange({ table: 'hs_audits', key: { id }, fields });
   },
 
   async setStatus(id: string, status: AuditStatus): Promise<void> {
-    await db.audits.update(id, { status, updatedAt: Date.now() });
+    await writeChange({ table: 'hs_audits', key: { id }, fields: { status } });
   },
 
   async markExported(id: string): Promise<void> {
-    await db.audits.update(id, { lastExportAt: Date.now() });
+    await writeChange({ table: 'hs_audits', key: { id }, fields: { last_export_at: Date.now() } });
   },
 
   archiveAudit(id: string): Promise<void> {
     return repo.setStatus(id, 'archived');
   },
 
-  async purgeAudit(id: string, typedAuditNo: string): Promise<void> {
+  /** "Delete for the team": a soft delete everyone sees; only this phone's copy of the photo bytes is freed. */
+  async deleteAudit(id: string, typedAuditNo: string): Promise<void> {
     const audit = await repo.getAudit(id);
     if (!audit) return;
     const expected = audit.header.auditNo.trim() || PURGE_FALLBACK_WORD;
     if (typedAuditNo.trim() !== expected) throw new Error('audit number does not match');
-    await db.transaction('rw', [db.audits, db.answers, db.positives, db.media, db.mediaBlobs, db.snapshots, db.settings], async () => {
+    await writeChange({ table: 'hs_audits', key: { id }, fields: { deleted_at: Date.now() } });
+    await db.transaction('rw', [db.media, db.mediaBlobs, db.settings], async () => {
       const mediaIds = await db.media.where('auditId').equals(id).primaryKeys();
       await db.mediaBlobs.bulkDelete(mediaIds);
-      await db.media.where('auditId').equals(id).delete();
-      await db.answers.where('auditId').equals(id).delete();
-      await db.positives.where('auditId').equals(id).delete();
-      await db.snapshots.where('auditId').equals(id).delete();
       await db.settings.delete(`walk:${id}`);
-      await db.audits.delete(id);
     });
+  },
+
+  async restoreAudit(id: string): Promise<void> {
+    await writeChange({ table: 'hs_audits', key: { id }, fields: { deleted_at: null } });
   },
 
   // ---- answers
@@ -182,24 +209,24 @@ export const repo = {
   },
 
   setResult(auditId: string, itemId: string, result: Result | undefined): Promise<void> {
-    return upsertAnswer(auditId, itemId, { result });
+    return answerChange(auditId, itemId, { result: result ?? null });
   },
 
   setNote(auditId: string, itemId: string, note: string): Promise<void> {
-    return upsertAnswer(auditId, itemId, { note });
+    return answerChange(auditId, itemId, { note });
   },
 
   /** Appends to whatever the note is at write time (dictation that arrives after the field is gone). */
   appendNote(auditId: string, itemId: string, text: string): Promise<void> {
-    return upsertAnswer(auditId, itemId, (current) => ({ note: appendText(current.note, text) }));
+    return answerChange(auditId, itemId, (current) => ({ note: appendText(current.note, text) }));
   },
 
   setFlag(auditId: string, itemId: string, flagged: boolean): Promise<void> {
-    return upsertAnswer(auditId, itemId, { flagged });
+    return answerChange(auditId, itemId, { flagged });
   },
 
   setRepeated(auditId: string, itemId: string, repeated: boolean): Promise<void> {
-    return upsertAnswer(auditId, itemId, { repeated });
+    return answerChange(auditId, itemId, { repeated });
   },
 
   // ---- positive observations
@@ -210,55 +237,27 @@ export const repo = {
 
   async addPositive(auditId: string, text: string): Promise<Positive> {
     const now = Date.now();
-    return db.transaction('rw', db.positives, db.audits, async () => {
-      const existing = await db.positives.where('auditId').equals(auditId).toArray();
-      const order = existing.reduce((max, p) => Math.max(max, p.order + 1), 0);
-      const positive: Positive = { id: newId(), auditId, text, order, updatedAt: now };
-      await db.positives.add(positive);
-      await touch(auditId, now);
-      return positive;
-    });
+    const existing = await db.positives.where('auditId').equals(auditId).toArray();
+    const order = existing.reduce((max, p) => Math.max(max, p.order + 1), 0);
+    const id = newId();
+    await writeChange({ table: 'hs_positives', key: { id }, fields: { audit_id: auditId, text, position: order, created_at: now }, at: now });
+    return (await db.positives.get(id))!;
   },
 
-  async updatePositive(id: string, text: string): Promise<void> {
-    const now = Date.now();
-    await db.transaction('rw', db.positives, db.audits, async () => {
-      const p = await db.positives.get(id);
-      if (!p) return;
-      await db.positives.put({ ...p, text, updatedAt: now });
-      await touch(p.auditId, now);
-    });
+  updatePositive(id: string, text: string): Promise<void> {
+    return positiveChange(id, { text });
   },
 
-  async appendPositiveText(id: string, text: string): Promise<void> {
-    const now = Date.now();
-    await db.transaction('rw', db.positives, db.audits, async () => {
-      const p = await db.positives.get(id);
-      if (!p) return;
-      await db.positives.put({ ...p, text: appendText(p.text, text), updatedAt: now });
-      await touch(p.auditId, now);
-    });
+  appendPositiveText(id: string, text: string): Promise<void> {
+    return positiveChange(id, (current) => ({ text: appendText(current.text, text) }));
   },
 
-  async removePositive(id: string): Promise<void> {
-    const now = Date.now();
-    await db.transaction('rw', db.positives, db.audits, async () => {
-      const p = await db.positives.get(id);
-      if (!p) return;
-      await db.positives.put({ ...p, deletedAt: now, updatedAt: now });
-      await touch(p.auditId, now);
-    });
+  removePositive(id: string): Promise<void> {
+    return positiveChange(id, { deleted_at: Date.now() });
   },
 
-  async restorePositive(id: string): Promise<void> {
-    const now = Date.now();
-    await db.transaction('rw', db.positives, db.audits, async () => {
-      const p = await db.positives.get(id);
-      if (!p) return;
-      const { deletedAt: _deleted, ...rest } = p;
-      await db.positives.put({ ...rest, updatedAt: now });
-      await touch(p.auditId, now);
-    });
+  restorePositive(id: string): Promise<void> {
+    return positiveChange(id, { deleted_at: null });
   },
 
   // ---- media
@@ -266,12 +265,16 @@ export const repo = {
     const now = Date.now();
     const { data, ...meta } = input;
     const row: MediaRow = { ...meta, id: newId(), bytes: data.byteLength, createdAt: now };
-    await db.transaction('rw', db.media, db.mediaBlobs, db.audits, async () => {
-      await db.mediaBlobs.add({ id: row.id, data });
-      await db.media.add(row);
-      await touch(input.auditId, now);
-    });
-    return { ...row, data };
+    if (row.type === 'photo') {
+      await writePhoto(row, data);
+    } else {
+      // Audio memos are no longer recorded; rows from older audits stay on this device only.
+      await db.transaction('rw', db.media, db.mediaBlobs, async () => {
+        await db.mediaBlobs.add({ id: row.id, data });
+        await db.media.add(row);
+      });
+    }
+    return { ...(await db.media.get(row.id))!, data };
   },
 
   /** Metadata only (thumbnails included): cheap enough for live lists and snapshots. */
@@ -292,26 +295,35 @@ export const repo = {
   },
 
   async softDeleteMedia(id: string): Promise<void> {
-    const now = Date.now();
-    await db.transaction('rw', db.media, db.audits, async () => {
-      const m = await db.media.get(id);
-      if (!m) return;
-      await db.media.update(id, { deletedAt: now });
-      await touch(m.auditId, now);
-    });
+    const m = await db.media.get(id);
+    if (!m) return;
+    if (m.type === 'photo') await writeChange({ table: 'hs_photos', key: { id }, fields: { deleted_at: Date.now() } });
+    else await db.media.update(id, { deletedAt: Date.now() });
   },
 
   async restoreMedia(id: string): Promise<void> {
-    const now = Date.now();
-    await db.transaction('rw', db.media, db.audits, async () => {
-      const m = await db.media.get(id);
-      if (!m) return;
-      await db.media.update(id, { deletedAt: undefined });
-      await touch(m.auditId, now);
-    });
+    const m = await db.media.get(id);
+    if (!m) return;
+    if (m.type === 'photo') await writeChange({ table: 'hs_photos', key: { id }, fields: { deleted_at: null } });
+    else await db.media.update(id, { deletedAt: undefined });
   },
 
-  // ---- tags
+  // ---- team
+  async memberName(id: string): Promise<string> {
+    if (id === getWriter()?.id) return 'you';
+    const m = await db.members.get(id);
+    return m?.fullName || m?.email || 'Someone';
+  },
+
+  listMembers(): Promise<Member[]> {
+    return db.members.toArray();
+  },
+
+  async listContractors(): Promise<Contractor[]> {
+    return (await db.contractors.toArray()).sort((a, b) => a.name.localeCompare(b.name));
+  },
+
+  // ---- tags (kept for older data; no screen edits them any more)
   async getItemTags(itemId: string): Promise<string[]> {
     const override = await db.tagOverrides.get(itemId);
     return override ? override.tags : defaultTagsFor(itemId);

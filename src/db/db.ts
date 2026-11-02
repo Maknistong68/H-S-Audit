@@ -104,6 +104,8 @@ export interface MediaBlob {
 /** A media row joined with its bytes. */
 export interface Media extends MediaRow {
   data: ArrayBuffer;
+  /** The full-size bytes are not on this device yet; `data` is the thumbnail. */
+  fromThumb?: boolean;
 }
 
 export type SnapshotReason = 'timer' | 'navigation' | 'manual' | 'before-restore' | 'before-import';

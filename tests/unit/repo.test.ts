@@ -2,10 +2,12 @@ import { test, expect, beforeEach } from 'vitest';
 import Dexie from 'dexie';
 import { db } from '../../src/db/db';
 import { repo } from '../../src/db/repo';
+import { setWriter } from '../../src/sync/writer';
 
 beforeEach(async () => {
   await db.delete();
   await db.open();
+  setWriter({ id: 'local', role: 'auditor' });
 });
 
 test('create, answer, progress', async () => {
@@ -22,7 +24,26 @@ test('create, answer, progress', async () => {
   expect(ans.find((x) => x.itemId === 'A1')).toMatchObject({ result: 'full', note: 'ok', flagged: false, repeated: false });
   await repo.setResult(a.id, 'A1', undefined);
   expect((await repo.listAudits())[0].answered).toBe(0);
-  expect((await repo.getAudit(a.id))!.updatedAt).toBeGreaterThanOrEqual(a.updatedAt);
+  expect((await repo.getAudit(a.id))!.activityAt).toBeGreaterThanOrEqual(a.updatedAt);
+  expect(await db.outbox.count()).toBe(5); // create + four answer writes, every one queued for the team
+});
+
+test('listAudits filters: all, mine, archived, deleted', async () => {
+  setWriter({ id: 'me', role: 'auditor' });
+  const mine = await repo.createAudit({ auditNo: 'MINE' });
+  setWriter({ id: 'other', role: 'lead' });
+  const theirs = await repo.createAudit({ auditNo: 'THEIRS' });
+  await repo.archiveAudit(theirs.id);
+  expect((await repo.listAudits()).map((x) => x.header.auditNo)).toEqual(['MINE']);
+  expect((await repo.listAudits({ filter: 'mine', me: 'me' })).map((x) => x.header.auditNo)).toEqual(['MINE']);
+  expect((await repo.listAudits({ filter: 'mine', me: 'other' })).map((x) => x.header.auditNo)).toEqual([]);
+  expect((await repo.listAudits({ filter: 'archived' })).map((x) => x.header.auditNo)).toEqual(['THEIRS']);
+  expect((await repo.listAudits())[0]).toMatchObject({ createdBy: 'me', activityBy: 'me', pending: 1 });
+  await repo.deleteAudit(mine.id, 'MINE');
+  expect(await repo.listAudits()).toEqual([]);
+  expect((await repo.listAudits({ filter: 'deleted' })).map((x) => x.header.auditNo)).toEqual(['MINE']);
+  await repo.restoreAudit(mine.id);
+  expect((await repo.listAudits()).map((x) => x.header.auditNo)).toEqual(['MINE']);
 });
 
 test('positives and media soft delete', async () => {
@@ -48,17 +69,20 @@ test('positives and media soft delete', async () => {
   expect((await repo.listMedia(a.id, { owner: { kind: 'item', itemId: 'B9.1' } })).length).toBe(1);
 });
 
-test('archive hides, purge is gated by typed audit number', async () => {
+test('archive hides; delete for the team is gated by the typed audit number and is soft', async () => {
   const a = await repo.createAudit({ auditNo: 'HSSEW-004' });
   await repo.setResult(a.id, 'A1', 'no');
+  const m = await repo.addMedia({ auditId: a.id, owner: { kind: 'item', itemId: 'A1' }, type: 'photo', data: new Uint8Array([1]).buffer, mime: 'image/jpeg' });
   await repo.archiveAudit(a.id);
   expect(await repo.listAudits()).toEqual([]);
-  expect((await repo.listAudits({ includeArchived: true })).length).toBe(1);
-  await expect(repo.purgeAudit(a.id, 'HSSEW-003')).rejects.toThrow(/does not match/);
-  expect(await db.answers.count()).toBe(1);
-  await repo.purgeAudit(a.id, 'HSSEW-004');
-  expect(await db.audits.count()).toBe(0);
-  expect(await db.answers.count()).toBe(0);
+  expect((await repo.listAudits({ filter: 'archived' })).length).toBe(1);
+  await expect(repo.deleteAudit(a.id, 'HSSEW-003')).rejects.toThrow(/does not match/);
+  expect((await repo.getAudit(a.id))!.deletedAt).toBeUndefined();
+  await repo.deleteAudit(a.id, 'HSSEW-004');
+  expect((await repo.getAudit(a.id))!.deletedAt).toBeGreaterThan(0);
+  expect(await db.answers.count()).toBe(1); // soft: nothing of the team's is destroyed
+  expect(await db.mediaBlobs.get(m.id)).toBeUndefined(); // only this phone's copy of the bytes goes
+  expect((await db.outbox.toArray()).at(-1)!.change.fields).toMatchObject({ deleted_at: expect.any(Number) });
 });
 
 test('tags: defaults, overrides, custom', async () => {
@@ -102,6 +126,11 @@ test('media bytes live apart from media metadata', async () => {
   expect(meta.find((m) => m.type === 'photo')!.thumb?.byteLength).toBe(1);
   expect(meta.find((m) => m.type === 'audio')!.bytes).toBe(3);
   expect(new Uint8Array((await repo.getMedia(photo.id))!.data)).toEqual(new Uint8Array([1, 2]));
+  expect((await repo.getMedia(photo.id))!.fromThumb).toBeUndefined();
+  await db.mediaBlobs.delete(photo.id); // a teammate's photo whose full bytes are not here yet
+  const partial = (await repo.getMedia(photo.id))!;
+  expect(partial.fromThumb).toBe(true);
+  expect(new Uint8Array(partial.data)).toEqual(new Uint8Array([3]));
   expect((await repo.listMedia(a.id, { type: 'photo' })).map((m) => m.type)).toEqual(['photo']);
   expect((await db.table('media').get(photo.id) as { data?: unknown }).data).toBeUndefined();
 });

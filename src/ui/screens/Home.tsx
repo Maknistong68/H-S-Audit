@@ -24,7 +24,7 @@ export function Home() {
   const [purgeTarget, setPurgeTarget] = useState<AuditSummary | null>(null);
   const [typed, setTyped] = useState('');
   const fileInput = useRef<HTMLInputElement>(null);
-  const audits = useLiveQuery(() => repo.listAudits({ includeArchived: showArchived }), [showArchived]);
+  const audits = useLiveQuery(() => repo.listAudits({ filter: showArchived ? 'archived' : 'all' }), [showArchived]);
 
   async function newAudit() {
     const audit = await repo.createAudit();
@@ -52,7 +52,7 @@ export function Home() {
   async function purge() {
     if (!purgeTarget || !canPurge) return;
     try {
-      await repo.purgeAudit(purgeTarget.id, typed);
+      await repo.deleteAudit(purgeTarget.id, typed);
       toast('Audit purged');
       setPurgeTarget(null);
       setTyped('');
