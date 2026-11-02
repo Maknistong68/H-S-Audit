@@ -1,5 +1,6 @@
 import Dexie, { type Table } from 'dexie';
 import type { Result } from '../domain/types';
+import type { OutboxEntry } from '../sync/types';
 
 export interface AuditHeader {
   contractorWo: string;
@@ -13,7 +14,17 @@ export interface AuditHeader {
 
 export type AuditStatus = 'draft' | 'final' | 'archived';
 
-export interface Audit {
+/** The dashboard's app_role: viewers read, the rest edit, admins also manage the team. */
+export type Role = 'viewer' | 'auditor' | 'lead' | 'admin';
+
+/** Sync columns every synced row carries locally; `fieldAt` keys are server column names. */
+export interface Synced {
+  updatedBy?: string;
+  fieldAt?: Record<string, number>;
+  serverAt?: string;
+}
+
+export interface Audit extends Synced {
   id: string;
   templateVersion: string;
   status: AuditStatus;
@@ -24,9 +35,19 @@ export interface Audit {
   lastExportAt?: number;
   /** Set when the audit was created by importing a backup. */
   importedAt?: number;
+  createdBy?: string;
+  /** Soft delete ("Delete for the team"); hidden everywhere but the admins' Deleted filter. */
+  deletedAt?: number;
+  /** The dashboard's contractors.id when picked. */
+  contractorId?: string;
+  /** Made before sign-in existed and not uploaded to the team yet. */
+  localOnly?: boolean;
+  /** Local only: newest change to the audit or anything in it, and who made it. */
+  activityAt?: number;
+  activityBy?: string;
 }
 
-export interface Answer {
+export interface Answer extends Synced {
   /** `${auditId}:${itemId}` */
   id: string;
   auditId: string;
@@ -38,19 +59,21 @@ export interface Answer {
   updatedAt: number;
 }
 
-export interface Positive {
+export interface Positive extends Synced {
   id: string;
   auditId: string;
   text: string;
   order: number;
   updatedAt: number;
   deletedAt?: number;
+  createdBy?: string;
+  createdAt?: number;
 }
 
 export type MediaOwner = { kind: 'item'; itemId: string } | { kind: 'positive'; positiveId: string };
 
 /** Metadata of a photo or memo; the bytes live in `mediaBlobs` so lists and snapshots never load them. */
-export interface MediaRow {
+export interface MediaRow extends Synced {
   id: string;
   auditId: string;
   owner: MediaOwner;
@@ -64,6 +87,12 @@ export interface MediaRow {
   thumb?: ArrayBuffer;
   createdAt: number;
   deletedAt?: number;
+  createdBy?: string;
+  updatedAt?: number;
+  /** `<auditId>/<id>.jpg` in the hs-photos bucket. */
+  storagePath?: string;
+  /** Set once the file is in Storage; until then the photo only exists on this phone. */
+  uploadedAt?: number;
 }
 
 export interface MediaBlob {
@@ -104,6 +133,22 @@ export interface Setting {
   value: unknown;
 }
 
+/** A teammate, from the server's team directory. */
+export interface Member {
+  id: string;
+  email: string;
+  fullName: string | null;
+  role: Role | null;
+  confirmed: boolean;
+}
+
+/** A contractor from the dashboard's list, for the header picker. */
+export interface Contractor {
+  id: string;
+  name: string;
+  contractNo?: string;
+}
+
 const V1_STORES = {
   audits: 'id, status, updatedAt',
   answers: 'id, auditId',
@@ -125,6 +170,9 @@ export class HsAuditDb extends Dexie {
   tagOverrides!: Table<TagOverride, string>;
   tags!: Table<Tag, string>;
   settings!: Table<Setting, string>;
+  outbox!: Table<OutboxEntry, number>;
+  members!: Table<Member, string>;
+  contractors!: Table<Contractor, string>;
 
   constructor() {
     super('hs-audit');
@@ -141,6 +189,13 @@ export class HsAuditDb extends Dexie {
           delete row.data;
           await tx.table('media').put(row);
         }
+      });
+    // v3: the team backend. Outbox of pending changes, the team directory, the contractor list, and
+    // every audit that existed before accounts is marked local-only until it is uploaded.
+    this.version(3)
+      .stores({ ...V1_STORES, audits: 'id, status, updatedAt, deletedAt', mediaBlobs: 'id', outbox: '++seq, key, auditId', members: 'id', contractors: 'id' })
+      .upgrade(async (tx) => {
+        await tx.table('audits').toCollection().modify({ localOnly: true });
       });
   }
 }
